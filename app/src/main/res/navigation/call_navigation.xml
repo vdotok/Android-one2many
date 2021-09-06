@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/call_navigation"
+    app:startDestination="@id/multiSelectionFragment">
+
+    <fragment
+        android:id="@+id/groupFragment"
+        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.GroupListingFragment"
+        android:label="groupFragment"
+        tools:layout="@layout/fragment_group_listing">
+
+        <action
+            android:id="@+id/action_open_dial_fragment"
+            app:destination="@id/dialFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/groupFragment"
+            app:launchSingleTop="true"
+            app:popUpToInclusive="true" />
+
+<!--        <action-->
+<!--            android:id="@+id/action_open_call_fragment"-->
+<!--            app:destination="@id/voiceFragment"-->
+<!--            app:enterAnim="@anim/slide_item_from_right"-->
+<!--            app:exitAnim="@anim/slide_item_to_left"-->
+<!--            app:popUpTo="@id/groupFragment"-->
+<!--            app:launchSingleTop="true"-->
+<!--            app:popUpToInclusive="true" />-->
+
+        <action
+            android:id="@+id/action_open_userList"
+            app:destination="@id/userListFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:launchSingleTop="true"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/dialFragment"
+        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.DialCallFragment"
+        android:label="dialFragment"
+        tools:layout="@layout/fragment_dial_call">
+
+        <action
+            android:id="@+id/action_open_call_fragment"
+            app:destination="@id/voiceFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/multiSelectionFragment"
+            app:popUpToInclusive="true"
+            app:launchSingleTop="true" />
+
+        <action
+            android:id="@+id/action_open_selection_fragment"
+            app:destination="@id/multiSelectionFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/multiSelectionFragment"
+            app:launchSingleTop="true"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/voiceFragment"
+        android:name="com.norgic.vdotokcall_mtm.feature.dashBoard.fragment.CallFragment"
+        android:label="voiceFragment"
+        tools:layout="@layout/layout_fragment_call">
+
+
+<!--        <action-->
+<!--            android:id="@+id/action_open_dial_fragment"-->
+<!--            app:destination="@id/dialFragment"-->
+<!--            app:enterAnim="@anim/slide_item_from_right"-->
+<!--            app:exitAnim="@anim/slide_item_to_left"-->
+<!--            app:launchSingleTop="true"-->
+<!--            app:popUpToInclusive="true" />-->
+
+        <action
+            android:id="@+id/action_open_multiSelectionFragment"
+            app:destination="@id/multiSelectionFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/voiceFragment"
+            app:popUpToInclusive="true"
+            app:launchSingleTop="true" />
+
+
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/userListFragment"
+        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.UserListFragment"
+        android:label="voiceFragment"
+        tools:layout="@layout/fragment_user_list">
+
+        <action
+            android:id="@+id/action_open_groupList"
+            app:destination="@id/groupFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/userListFragment"
+            app:popUpToInclusive="true"
+            app:launchSingleTop="true" />
+
+
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/multiSelectionFragment"
+        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.MultiSelectionFragment"
+        android:label="multiSelectionFragment"
+        tools:layout="@layout/fragment_multi_selection">
+
+        <action
+            android:id="@+id/action_open_groupList"
+            app:destination="@id/groupFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/groupFragment"
+            app:popUpToInclusive="true"
+            app:launchSingleTop="true" />
+        <action
+            android:id="@+id/action_open_dial_fragment"
+            app:destination="@id/dialFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:launchSingleTop="true"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_open_dial_public_fragment"
+            app:destination="@+id/DialPublicFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:launchSingleTop="true"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/DialPublicFragment"
+        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.PublicDialCallFragment"
+        android:label="DialPublicFragment"
+        tools:layout="@layout/fragment_dial_call_public">
+
+        <action
+            android:id="@+id/action_open_selection_fragment"
+            app:destination="@id/multiSelectionFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/DialPublicFragment"
+            app:launchSingleTop="true"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_open_call_public_fragment"
+            app:destination="@id/callPublicFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/DialPublicFragment"
+            app:launchSingleTop="true"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/callPublicFragment"
+        android:name="com.norgic.vdotokcall_mtm.feature.dashBoard.fragment.PublicCallFragment"
+        android:label="callPublicFragment"
+        tools:layout="@layout/layout_fragment_call_public">
+
+        <action
+            android:id="@+id/action_open_multiSelectionFragment"
+            app:destination="@id/multiSelectionFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/callPublicFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+</navigation>

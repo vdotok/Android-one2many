@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.norgic.vdotokcall_mtm">
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/logo_main"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/logo_main"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.VdoTokCall_MTM"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="m">
+        <service
+            android:enabled="true"
+            tools:targetApi="q"
+            android:exported="true"
+            android:foregroundServiceType="mediaProjection"
+            android:name=".service.ProjectionService" />
+        <activity
+            android:name=".ui.dashboard.DashBoardActivity"
+            android:theme="@style/Theme.AccountScreen"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.account.AccountsActivity"
+            android:theme="@style/Theme.AccountScreen"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".ui.SplashActivity"
+            android:theme="@style/Theme.AccountScreen"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

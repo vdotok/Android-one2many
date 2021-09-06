@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+        <variable
+            name="incomingCallTitle"
+            type="androidx.databinding.ObservableField&lt;String&gt;" />
+        <variable
+            name="username"
+            type="androidx.databinding.ObservableField&lt;String&gt;" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/containerIncomingCall">
+
+        <View
+            android:layout_height="0dp"
+            android:layout_width="match_parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:background="@color/light_grey1"
+            app:layout_constraintBottom_toTopOf="@id/viewCall" />
+
+
+        <TextView
+            android:id="@+id/tvUserNameReceiver"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:gravity="center_horizontal"
+            style="@style/Text_Call_Name"
+            android:fontFamily="@font/poppins_medium"
+            android:layout_marginTop="120dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:text="@string/initial_broadcast"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <View
+            android:id="@+id/viewCall"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/light_grey1"
+            app:layout_constraintTop_toBottomOf="@id/tvUserNameReceiver"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <ImageView
+            android:id="@+id/imgUserPhoto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_user_icon"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+        <Button
+            android:id="@+id/btn_copy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/Theme_Button_Activated"
+            android:padding="4dp"
+            android:layout_marginTop="20dp"
+            android:background="@drawable/copy_ripple_button"
+            android:text="@string/copy_url"
+            app:layout_constraintTop_toBottomOf="@id/imgUserPhoto"
+            app:layout_constraintEnd_toEndOf="@id/imgUserPhoto"
+            app:layout_constraintStart_toStartOf="@id/imgUserPhoto"
+
+            />
+        <LinearLayout
+            android:id="@+id/bottomBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="44dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <ImageView
+                android:id="@+id/imgscreenn"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/screen_sharing_icon" />
+
+            <ImageView
+                android:id="@+id/imgCamera"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/ic_call_video_rounded" />
+            <ImageView
+                android:id="@+id/imgCallOff"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="10dp"
+                android:src="@drawable/ic_end_call" />
+
+            <ImageView
+                android:id="@+id/imgMute"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="10dp"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_unmute_mic" />
+            <ImageView
+                android:id="@+id/internal_audio"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="30dp"
+                android:src="@drawable/ic_internal_audio_icon" />
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</layout>

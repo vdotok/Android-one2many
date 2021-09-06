@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <data>
+        <variable
+            name="screenSharingApp"
+            type="Boolean" />
+        <variable
+            name="screenSharingMic"
+            type="Boolean" />
+        <variable
+            name="cameraCall"
+            type="Boolean" />
+        <variable
+            name="optionSelected"
+            type="Boolean" />
+        <variable
+            name="username"
+            type="androidx.databinding.ObservableField&lt;String&gt;" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/white">
+
+        <include android:id="@+id/custom_toolbar"
+            layout="@layout/custom_toolbar"/>
+
+        <RadioGroup
+            android:id="@+id/radio_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/custom_toolbar"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent">
+            <RadioButton
+                android:id="@+id/public_cast"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:theme="@style/MyRadioButton"
+                android:layout_marginEnd="20dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginBottom="20dp"
+                android:text="@string/public_broadcast"/>
+            <RadioButton
+                android:id="@+id/group_cast"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:theme="@style/MyRadioButton"
+                android:layout_marginStart="20dp"
+                android:layout_marginBottom="20dp"
+                android:text="@string/group_broadcast"/>
+        </RadioGroup>
+
+        <Button
+            android:id="@+id/btn_sharing_appAudio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sharing_with_app_audio"
+            android:textAllCaps="true"
+            android:textColor="@color/indigo"
+            android:layout_marginTop="60dp"
+            android:layout_marginBottom="30dp"
+            android:padding="10dp"
+            android:textSize="14sp"
+            android:fontFamily="@font/manrope_bold_700"
+            android:background="@{screenSharingApp == true ? @drawable/ripple_effect_button_refresh_yellow :  @drawable/ripple_effect_button_refresh}"
+            app:layout_constraintBottom_toTopOf="@+id/btn_sharing_micAudio"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/radio_group"
+            tools:text="Screen sharing with app audio"
+            />
+
+        <Button
+            android:id="@+id/btn_sharing_micAudio"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/sharing_with_mic_audio"
+            android:textAllCaps="true"
+            android:textColor="@color/indigo"
+            android:layout_marginTop="30dp"
+            android:padding="10dp"
+            android:textSize="14sp"
+            android:fontFamily="@font/manrope_bold_700"
+            android:background="@{screenSharingMic == true ? @drawable/ripple_effect_button_refresh_yellow :  @drawable/ripple_effect_button_refresh}"
+            app:layout_constraintTop_toBottomOf="@id/btn_sharing_appAudio"
+            app:layout_constraintEnd_toEndOf="@+id/btn_sharing_appAudio"
+            app:layout_constraintStart_toStartOf="@+id/btn_sharing_appAudio"
+            tools:text="Screen sharing with mic audio"/>
+
+
+        <Button
+            android:id="@+id/btn_camera"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@string/camera"
+            android:textAllCaps="true"
+            android:padding="10dp"
+            android:textColor="@color/indigo"
+            android:layout_marginTop="30dp"
+            android:textSize="14sp"
+            android:fontFamily="@font/manrope_bold_700"
+            android:background="@{cameraCall == true ? @drawable/ripple_effect_button_refresh_yellow :  @drawable/ripple_effect_button_refresh}"
+            app:layout_constraintTop_toBottomOf="@+id/btn_sharing_micAudio"
+            app:layout_constraintEnd_toEndOf="@+id/btn_sharing_appAudio"
+            app:layout_constraintStart_toStartOf="@+id/btn_sharing_appAudio"
+            tools:text="Camera"/>
+
+        <Button
+            android:id="@+id/btn_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/Theme_Button_Activated"
+            android:textAllCaps="false"
+            android:layout_marginStart="100dp"
+            android:layout_marginTop="39dp"
+            android:padding="0dp"
+            android:layout_marginEnd="100dp"
+            android:textColor="@color/white"
+            android:background="@{optionSelected == true ? @drawable/roundbutton_indigo :@drawable/roundbutton2}"
+            android:text="@string/continue_text"
+            app:layout_constraintTop_toBottomOf="@id/btn_camera"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/frame" />
+
+        <FrameLayout
+            android:id="@+id/frame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="84dp"
+            android:layout_marginTop="40dp"
+            android:layout_marginEnd="82dp"
+            android:padding="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@+id/btn_sharing_appAudio"
+            app:layout_constraintStart_toStartOf="@+id/btn_sharing_appAudio"
+            app:layout_constraintTop_toBottomOf="@id/btn_confirm">
+
+            <TextView
+                android:id="@+id/tv_logout"
+                style="@style/Theme_Button_DeActivated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="60dp"
+                android:layout_marginEnd="10dp"
+                android:textAllCaps="true"
+                android:background="@drawable/ripple_effect_textview"
+                android:gravity="center"
+                tools:text="Log out - chilli"
+                android:stateListAnimator="@null"
+                android:text="@{String.format(@string/btn_log_out,username)}" />
+
+            <ImageView
+                android:id="@+id/tv_led"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_marginTop="2dp"
+                android:layout_gravity="end|top"
+                android:src="@drawable/led_error" />
+        </FrameLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

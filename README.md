@@ -2,61 +2,53 @@ vdotok-Android-One2ManyCall
 ===================
 IDE Installation & Build Guide
 ==============================
-Requirements
+<b>Requirements:</b>
 * Android Studio 4.1.2 or later (Stable Version)
-* you can follow the link to download and install Android Stuiod
-    * “https://developer.android.com/studio?gclid=Cj0KCQjwhr2FBhDbARIsACjwLo2fEHdB3l3eqRlhIvySYNx1-3XjDmuX1eSCbaCI7zU8FKHFkGBcVyMaAtSjEALw_wcB&gclsrc=aw.ds#downloads”
-* Android SDKs 21(Lollipop) or later
+* [Click here](https://developer.android.com/studio?gclid=Cj0KCQjwhr2FBhDbARIsACjwLo2fEHdB3l3eqRlhIvySYNx1-3XjDmuX1eSCbaCI7zU8FKHFkGBcVyMaAtSjEALw_wcB&gclsrc=aw.ds#downloads) to download and install Android Studio
+* Android SDKs 21 or later
     * For downloading Android SDKs
     * Open Android Studio
-    * Goto file menu Tools and select “<b>SDK Manager</b>”
-    * Checkmark api level 21 and onward 
-    * click apply and download respective packages
+    * From the welcome page open <b>SDK Manager</b>
+    * On Android Studio 4.1 or onward click on configure <img width="100" alt="Screenshot 2021-09-21 at 12 40 27 PM" src="https://user-images.githubusercontent.com/86282129/134131257-af72db7c-912d-47f3-9758-4de0479db9ca.png"> from right bottom and select <b>SDK Manager</b>
+    * For Android Studio 4.2 or onward click on three dots <img width="19" alt="Screenshot 2021-09-21 at 12 35 14 PM" src="https://user-images.githubusercontent.com/86282129/134130491-4f77bf35-a845-4a07-b577-bb4f7df1195a.png"> from the top right cornor and select <b>SDK Manager</b>
+    * Or in the case welcome page doesn't open then goto file menu <b>Tools -> SDK Manager</b>
+    * Click All checkboxes from <b>API Level 21 and onward</b> 
+    * Click <b>Apply</b> and download relevant packages
 
+<b>Code setup</b>
+* Open <b>Android Studio</b>
+* Click on <b>Get from Version Control</b> Or in the case welcome page doesn't open, go to <b>File Menu->New</b> and select <b>Project From Version Control</b>
+* Select <b>Repository URL</b> from left menu
+* Select <b>Git</b> from Version control dropdown menu
+* Paste this URL <b>https://github.com/vdotok/Android-one2one.git</b> in URL section
+* Click on <b>Clone</b> button and wait for build.gradle file you can see the progress on bottom of <b>Android Studio</b>
+* Let the <b>Android Studio</b> install the components
 
+Bravo! You’ve successfully configured the project in Android Studio.
 
-Code setup
-* Open Android Studio
-* Click on “<b>Get from Version Control</b>” or if Android studio is alredy open goto File menu file new and select "<b>Project From Version Control</b>"
-* Select “<b>Repository URL</b>” from left menu
-* Select “<b>Git</b>” from Version control dropdown menu
-* Paste this URL "<b>https://github.com/vdotok/Android-one2many.git</b>" in URL section
-* click on clone button and wait for build .gradle files you can see the progress on bottom of android studio
-* let the android studio install the components, 
-* Hurrraaaa you Just configure the project in android studio
+<b>Download Call Lib</b>
+* Go to: https://sdk.vdotok.com/Android-SDKs/ and download “<b>norgic-callsdk-v1.0.0.aar</b>” file
 
-To Download Call Lib
-* Follow the link below and download “<b>norgic-callsdk-v1.0.0.aar</b>” file
-* https://sdk.vdotok.com/Android-SDKs/
-
-Configure Lib
-* From Android Studio file menu click on File->New->New Module-> Import .JAR/.AAR Package and click on next
-* Select downloaded “<b>norgic-callsdk-v1.0.0.aar</b>” .AAR file and click Finish
-* From Android Studio File Explorer select project 
+<b>Configure Lib</b>
+* In <b> Android Studio File Explorer</b>, select <b>Project</b>
 <img width="498" alt="123636395-41e08980-d836-11eb-8643-429d6e5510d5" src="https://user-images.githubusercontent.com/86282129/123811571-cb628b00-d90c-11eb-9584-b5a8f12957dc.png">
 
-* And then go to vdotok-call -> app -> build.gradle and past following line in Dependencies  section
-* “<b>implementation project(path: ':norgic-callsdk-v1.0.0')</b>”
-* Click on “<b>sync now</b>” Button from top right corner
-<img width="798" alt="Screenshot 2021-06-29 at 6 59 02 PM" src="https://user-images.githubusercontent.com/86282129/123811034-542cf700-d90c-11eb-8294-04a1a9d858c5.png">
+* Go to <b>VdoTok-Call -> App -> libs</b>
+* Add the downloaded <b>norgic-callsdk-v1.0.0.aar</b> file in the libs folder
+<img width="333" alt="Screenshot 2021-09-21 at 1 28 49 PM" src="https://user-images.githubusercontent.com/86282129/134138144-af382294-6f65-4329-aed4-a258695abfca.png">
 
+<b>Project Signup and Project ID</b>
+* Register for “Call Server” at [VdoTok](https://userpanel.vdotok.com/signup) and get the <b>Project ID</b>
+* From file explorer <b>vdotok-call -> app -> src -> main -> java -> com -> norgic -> vdotokcall -> utils -> ApplicationConstants</b> replace <b>SDK_PROJECT_ID</b> with your own <b>Project Id</b>
 
-Project Signup and Project ID
-* Follow the link below register your self for call server and get the project Id
-* https://www.vdotok.com/
-* From File explorer open VdoTokCall -> app -> src -> main -> java -> com -> norgic -> vdotokcall -> utils -> ApplicationConstants replace “<b>SDK_PROJECT_ID</b>” with your own Project Id 
+<b>Device Setting</b>
+* To connect a device, enable <b>“developer mode”</b> and <b>“USB debugging”</b> by following the device-specific steps provided on the following link
+* https://developer.android.com/studio/debug/dev-options 
 
-Build Project 
-* Connect your phone with system in file sharing mode
-* You can find your phone name in running devices list like describe in below image
-* select your device and click on Play button
-* After running some automated commands and building gradle your app will install on you connected device
+<b>Build Project</b>
+* Connect your phone with system in <b>File-sharing Mode</b>
+* You can find your phone name in running devices list as describe in below image
+* Select your device and click on Play button<img width="24" alt="Screenshot 2021-09-21 at 1 19 15 PM" src="https://user-images.githubusercontent.com/86282129/134136764-72c0f47e-6ecb-4c62-a562-804b68042fe5.png">
+* After running some automated commands and building gradle, your app will be installed on your connected device
 <img width="1012" alt="Screenshot 2021-06-29 at 6 59 36 PM" src="https://user-images.githubusercontent.com/86282129/123811062-5bec9b80-d90c-11eb-96e1-ee50dee125c5.png">
-
-Device Setting
-* In order to connect you device with android studio you need to enable developer mode
-* For enabling developer mode and usb debug you may follow the device specific steps
-* you can follow the step described in link below to enable developer options and usb debugging
-* https://developer.android.com/studio/debug/dev-options
-
 

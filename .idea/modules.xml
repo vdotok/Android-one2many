@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/VdoTokCall_MTM.iml" filepath="$PROJECT_DIR$/.idea/modules/VdoTokCall_MTM.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/VdoTokCall_MTM.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/VdoTokCall_MTM.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/VdoTokCall.iml" filepath="$PROJECT_DIR$/.idea/modules/VdoTokCall.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/VdoTokCall.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/VdoTokCall.app.iml" />
     </modules>
   </component>
 </project>

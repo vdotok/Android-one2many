@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/groupFragment"
-        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.GroupListingFragment"
+        android:name="com.vdotok.one2many.ui.dashboard.fragment.GroupListingFragment"
         android:label="groupFragment"
         tools:layout="@layout/fragment_group_listing">
 
@@ -41,7 +41,7 @@
 
     <fragment
         android:id="@+id/dialFragment"
-        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.DialCallFragment"
+        android:name="com.vdotok.one2many.ui.dashboard.fragment.DialCallFragment"
         android:label="dialFragment"
         tools:layout="@layout/fragment_dial_call">
 
@@ -66,7 +66,7 @@
 
     <fragment
         android:id="@+id/voiceFragment"
-        android:name="com.norgic.vdotokcall_mtm.feature.dashBoard.fragment.CallFragment"
+        android:name="com.vdotok.one2many.ui.dashboard.fragment.CallFragment"
         android:label="voiceFragment"
         tools:layout="@layout/layout_fragment_call">
 
@@ -94,7 +94,7 @@
 
     <fragment
         android:id="@+id/userListFragment"
-        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.UserListFragment"
+        android:name="com.vdotok.one2many.ui.dashboard.fragment.UserListFragment"
         android:label="voiceFragment"
         tools:layout="@layout/fragment_user_list">
 
@@ -113,7 +113,7 @@
 
     <fragment
         android:id="@+id/multiSelectionFragment"
-        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.MultiSelectionFragment"
+        android:name="com.vdotok.one2many.ui.dashboard.fragment.MultiSelectionFragment"
         android:label="multiSelectionFragment"
         tools:layout="@layout/fragment_multi_selection">
 
@@ -144,7 +144,7 @@
 
     <fragment
         android:id="@+id/DialPublicFragment"
-        android:name="com.norgic.vdotokcall_mtm.ui.dashboard.fragment.PublicDialCallFragment"
+        android:name="com.vdotok.one2many.ui.dashboard.fragment.PublicDialCallFragment"
         android:label="DialPublicFragment"
         tools:layout="@layout/fragment_dial_call_public">
 
@@ -168,7 +168,7 @@
 
     <fragment
         android:id="@+id/callPublicFragment"
-        android:name="com.norgic.vdotokcall_mtm.feature.dashBoard.fragment.PublicCallFragment"
+        android:name="com.vdotok.one2many.feature.dashBoard.fragment.PublicCallFragment"
         android:label="callPublicFragment"
         tools:layout="@layout/layout_fragment_call_public">
 

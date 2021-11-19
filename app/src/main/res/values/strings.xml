@@ -21,6 +21,7 @@
     <string name="invalid_username">Invalid Username Credential</string>
     <string name="invalid_password">Invalid Password Credential</string>
     <string name="create_group">Create group</string>
+    <string name="group_updated">Group Updated</string>
     <string name="group_created">Group created success</string>
     <string name="add_group_title">Create a group chat</string>
     <string name="name_group_chat">Creating your URL...</string>
@@ -57,6 +58,7 @@
     <string name="no_network_available">No network available!</string>
     <string name="cancel">Cancel</string>
     <string name="no_contacts">No contacts found!</string>
+    <string name="no_internet">No Internet Connection</string>
 
     <!--    image descriptions-->
     <string name="description_attachment">image for attachment menu</string>
@@ -76,7 +78,10 @@
     <string name="no_user_select">No User Selected</string>
     <string name="no_user_found">No User Found</string>
 
-    <string name="video_calling">You are on screen sharing call with</string>
+    <string name="incoming_calling">You are on call with</string>
+    <string name="screen_calling">You are on screen sharing call with</string>
+    <string name="video_calling">You are on video call with</string>
+    <string name="screen_video_calling">You are on video / screen sharing call with</string>
     <string name="audio_calling">You are audio call with</string>
     <string name="incoming_call">Incoming Screen Sharing Call from</string>
     <string name="outgoing_call">Calling</string>
@@ -86,6 +91,9 @@
     <string name="group_audio_calling">You are calling with</string>
     <string name="group_video_calling">You are video calling with</string>
     <string name="internal_audio">"Do you want to enable internal audio ?"</string>
+    <string name="no_user_data_found">"No user data found please re-login"</string>
+    <string name="socket_connected">"Socket Connected!"</string>
+    <string name="socket_connection_failed">"Socket Connection failed! No Internet!"</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="broadcast">broadcast</string>
@@ -104,4 +112,5 @@
     <string name="copy_url">Copy</string>
     <string name="your_url">Copy URL</string>
     <string name="copy_url_text">Text is copied to clipboard</string>
+    <string name="broad_casting_screen_sharing">Broad Casting Screen Sharing</string>
 </resources>

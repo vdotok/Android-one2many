@@ -8,7 +8,7 @@
 
     <variable
         name="groupModel"
-        type="com.vdotok.one2many.models.GroupModel"/>
+        type="com.vdotok.network.models.GroupModel"/>
 
     <variable
         name="participantsNames"

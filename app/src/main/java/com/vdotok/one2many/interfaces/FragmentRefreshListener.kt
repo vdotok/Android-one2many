@@ -3,7 +3,7 @@ package com.vdotok.one2many.interfaces
 import android.media.projection.MediaProjection
 import com.vdotok.streaming.models.CallParams
 import com.vdotok.streaming.models.SessionStateInfo
-import com.vdotok.one2many.models.GroupModel
+import com.vdotok.network.models.GroupModel
 import org.webrtc.VideoTrack
 
 /**

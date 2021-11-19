@@ -7,13 +7,17 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.ObservableField
+import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
+import com.vdotok.network.models.AllGroupsResponse
+import com.vdotok.network.models.DeleteGroupModel
+import com.vdotok.network.network.NetworkConnectivity
+import com.vdotok.network.models.GroupModel
 import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.enums.*
 import com.vdotok.streaming.models.CallParams
@@ -25,20 +29,16 @@ import com.vdotok.one2many.dialogs.UpdateGroupNameDialog
 import com.vdotok.one2many.extensions.*
 import com.vdotok.one2many.fragments.CallMangerListenerFragment
 import com.vdotok.one2many.models.*
-import com.vdotok.one2many.network.ApiService
 import com.vdotok.one2many.network.HttpResponseCodes
-import com.vdotok.one2many.network.Result
-import com.vdotok.one2many.network.RetrofitBuilder
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.service.ProjectionService
 import com.vdotok.one2many.ui.account.AccountsActivity
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.ApplicationConstants
-import com.vdotok.one2many.utils.safeApiCall
+import com.vdotok.network.network.Result
 import com.vdotok.one2many.utils.showDeleteGroupAlert
 import kotlinx.coroutines.*
 import org.webrtc.VideoTrack
-import retrofit2.HttpException
 
 
 /**
@@ -66,6 +66,8 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     var user : String? = null
 
     var groupModel: GroupModel?= null
+    private val viewModel : AllGroupsFragmentViewModel by viewModels()
+
 
 
     override fun onCreateView(
@@ -150,32 +152,25 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
      * Function to call api for getting all group on server
      * */
     private fun getAllGroups() {
+        binding.swipeRefreshLay.isRefreshing = false
         binding.progressBar.toggleVisibility()
-        val apiService: ApiService = RetrofitBuilder.makeRetrofitService(this.requireContext())
-        prefs.loginInfo?.authToken.let {
-            CoroutineScope(Dispatchers.IO).launch {
-                val response = safeApiCall { apiService.getAllGroups(auth_token = "Bearer $it") }
-                withContext(Dispatchers.Main) {
-                    try {
-                        when (response) {
-                            is Result.Success -> {
-                                handleAllGroupsResponse(response.data)
-                            }
-                            is Result.Error -> {
-                                if (response.error.responseCode == ApplicationConstants.HTTP_CODE_NO_NETWORK) {
-                                    binding.root.showSnackBar(getString(R.string.no_network_available))
-                                } else {
-                                    binding.root.showSnackBar(response.error.message)
-                                }
-                            }
-                        }
-                    } catch (e: HttpException) {
-                        Log.e(ApplicationConstants.API_ERROR, "AllUserList: ${e.printStackTrace()}")
-                    } catch (e: Throwable) {
-                        Log.e(ApplicationConstants.API_ERROR, "AllUserList: ${e.printStackTrace()}")
+
+        activity?.let { activity ->
+            viewModel.getAllGroups("Bearer ${prefs.loginInfo?.authToken}").observe(activity) {
+                binding.progressBar.toggleVisibility()
+                when (it) {
+                    Result.Loading -> {
+                        binding.progressBar.toggleVisibility()
                     }
-                    binding.progressBar.toggleVisibility()
-                    binding.swipeRefreshLay.isRefreshing = false
+                    is Result.Success ->  {
+//                        binding.progressBar.toggleVisibility()
+                        handleAllGroupsResponse(it.data)
+                    }
+                    is Result.Failure -> {
+                        binding.progressBar.toggleVisibility()
+                        if(NetworkConnectivity.isNetworkAvailable(activity).not())
+                            binding.root.showSnackBar(getString(R.string.no_internet))
+                    }
                 }
             }
         }
@@ -183,19 +178,19 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
 
     private fun handleAllGroupsResponse(response: AllGroupsResponse) {
         when(response.status) {
-            HttpResponseCodes.SUCCESS.value.toInt() -> {
+            HttpResponseCodes.SUCCESS.value -> {
                 response.let { groupsResponse ->
-                    if (groupsResponse.groups.isEmpty()) {
+                    if (groupsResponse.groups?.isEmpty() == true) {
                         binding.groupChatListing.show()
                         binding.rcvUserList.hide()
                     } else {
                         groupList.clear()
-                        groupsResponse.groups.forEach {
+                        groupsResponse.groups?.forEach {
                             groupList.add(it)
                         }
                         binding.rcvUserList.show()
                         binding.groupChatListing.hide()
-                        adapter.updateData(groupsResponse.groups)
+                        groupsResponse.groups?.let { adapter.updateData(it) }
                     }
                 }
             }
@@ -207,8 +202,9 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
 
 
     override fun onEditClick(groupModel: GroupModel) {
-        activity?.supportFragmentManager.let { UpdateGroupNameDialog(groupModel, this::getAllGroups).show(
-            it!!,
+        activity?.supportFragmentManager?.let {
+            UpdateGroupNameDialog(groupModel, this::getAllGroups).show(
+            it,
             UpdateGroupNameDialog.UPDATE_GROUP_TAG
         ) }
 
@@ -228,6 +224,12 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
     override fun onGroupClick(groupModel: GroupModel) {
+        if (groupModel.autoCreated == 1 ){
+                    (activity as DashBoardActivity).incomingName = prefs.loginInfo?.fullName
+        }else {
+            (activity as DashBoardActivity).incomingName = groupModel.groupTitle.toString()
+        }
+        (activity as DashBoardActivity).incomingUserName()
         this.groupModel = groupModel
         if ((screenSharingApp && isInternalAudioIncluded && cameraCall) || (screenSharingMic && !isInternalAudioIncluded && cameraCall)
                 ||(screenSharingApp && !isInternalAudioIncluded && cameraCall) ||
@@ -254,8 +256,8 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     private fun startSession(mediaProjection: MediaProjection?) {
         val refIdList = ArrayList<String>()
         groupModel?.participants?.forEach { participant ->
-            if (participant.refId != prefs.loginInfo?.refId)
-                participant.refId?.let { refIdList.add(it) }
+            if (participant.refID != prefs.loginInfo?.refId)
+                participant.refID?.let { refIdList.add(it) }
         }
 
         if (callClient.isConnected() == true) {
@@ -270,7 +272,8 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                         callType = CallType.ONE_TO_MANY,
                         sessionType = SessionType.SCREEN,
                         isAppAudio = isInternalAudioIncluded,
-                        isBroadcast = 0
+                        isBroadcast = 0,
+                        customDataPacket = (activity as DashBoardActivity).callerName
                     ),
                     mediaProjection
                 )
@@ -331,47 +334,28 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
      * Function to call api for deleting a group from server
      * */
     private fun deleteGroup(model: DeleteGroupModel) {
-        activity?.let {
-            binding.progressBar.toggleVisibility()
-            val apiService: ApiService = RetrofitBuilder.makeRetrofitService(it)
-            prefs.loginInfo?.authToken.let {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val response = safeApiCall { apiService.deleteGroup(
-                        auth_token = "Bearer $it",
-                        model = model
-                    )}
-                    withContext(Dispatchers.Main) {
-                        try {
-                            when (response) {
-                                is Result.Success -> {
-                                    if (response.data.status == ApplicationConstants.SUCCESS_CODE) {
-                                        binding.root.showSnackBar(getString(R.string.group_deleted))
-                                        getAllGroups()
-                                    } else {
-                                        binding.root.showSnackBar(response.data.message)
-                                    }
-                                }
-                                is Result.Error -> {
-                                    if (response.error.responseCode == ApplicationConstants.HTTP_CODE_NO_NETWORK) {
-                                        binding.root.showSnackBar(getString(R.string.no_network_available))
-                                    } else {
-                                        binding.root.showSnackBar(response.error.message)
-                                    }
-                                }
-                            }
-                        } catch (e: HttpException) {
-                            Log.e(
-                                ApplicationConstants.API_ERROR,
-                                "signUpUser: ${e.printStackTrace()}"
-                            )
-                        } catch (e: Throwable) {
-                            Log.e(
-                                ApplicationConstants.API_ERROR,
-                                "signUpUser: ${e.printStackTrace()}"
-                            )
+        activity?.let { activity ->
+            viewModel.deleteGroup("Bearer ${prefs.loginInfo?.authToken}",model).observe(activity) {
+                binding.progressBar.toggleVisibility()
+                when (it) {
+                    Result.Loading -> {
+                        binding.progressBar.toggleVisibility()
+                    }
+                    is Result.Success ->  {
+                        if (it.data.status == ApplicationConstants.SUCCESS_CODE) {
+                            getAllGroups()
+                            binding.root.showSnackBar(getString(R.string.group_deleted))
+                        } else {
+                            binding.root.showSnackBar(it.data.message)
                         }
                         binding.progressBar.toggleVisibility()
-                        binding.swipeRefreshLay.isRefreshing = false
+                        binding.root.showSnackBar(getString(R.string.group_deleted))
+                        getAllGroups()
+                    }
+                    is Result.Failure -> {
+                        binding.progressBar.toggleVisibility()
+                        if(NetworkConnectivity.isNetworkAvailable(activity).not())
+                            binding.root.showSnackBar(getString(R.string.no_internet))
                     }
                 }
             }
@@ -382,14 +366,13 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     override fun onStartCalling() {
     }
 
-
     override fun outGoingCall(toPeer: GroupModel) {
         activity?.let {
             it.runOnUiThread {
                 openCallFragment(toPeer, isVideo)
             }
-        }
-    }
+        }    }
+
     /**
      * Function to pass data at outgoing side call
      * @param toPeer toPeer object is the group data from server
@@ -458,8 +441,8 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     private fun initiatePublicMultiBroadcast(internalAudioIncluded: Boolean, mediaProjection: MediaProjection?, isGroupSession: Boolean) {
         val refIdList = ArrayList<String>()
         groupModel?.participants?.forEach { participant ->
-            if (participant.refId != prefs.loginInfo?.refId)
-                participant.refId?.let { refIdList.add(it) }
+            if (participant.refID != prefs.loginInfo?.refId)
+                participant.refID?.let { refIdList.add(it) }
         }
 
         if (callClient.isConnected() == true) {
@@ -470,7 +453,8 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                                 refId = it.refId!!,
                                 toRefIds = refIdList,
                                 callType = CallType.ONE_TO_MANY,
-                                isAppAudio = isInternalAudioIncluded
+                                isAppAudio = isInternalAudioIncluded,
+                                customDataPacket = (activity as DashBoardActivity).callerName
                         ),
                         mediaProjection,
                         isGroupSession
@@ -487,7 +471,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         activity?.runOnUiThread {
             val bundle = Bundle()
             bundle.putParcelableArrayList("grouplist", groupList)
-            bundle.putString("userName", getUsername(model.refId))
+            bundle.putString("userName", model.customDataPacket.toString())
             bundle.putParcelable(AcceptCallModel.TAG, model)
             bundle.putBoolean("isIncoming", true)
             bundle.putBoolean(DialCallFragment.IS_VIDEO_CALL, model.mediaType == MediaType.VIDEO)
@@ -502,7 +486,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         groupList.let {
             it.forEach { name ->
                 name.participants.forEach { username ->
-                    if (username.refId?.equals(refId) == true) {
+                    if (username.refID?.equals(refId) == true) {
                         user = username.fullname
                         return user
                     }
@@ -515,7 +499,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
 
     private fun dialOneToOneCall(mediaType: MediaType, sessionType: SessionType, groupModel: GroupModel) {
 
-        val refIdList = groupModel.participants.map { it.refId } as ArrayList<String>
+        val refIdList = groupModel.participants.map { it.refID } as ArrayList<String>
         refIdList.remove(prefs.loginInfo?.refId)
 
         if (callClient.isConnected() == true) {
@@ -530,7 +514,8 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                         callType = CallType.ONE_TO_MANY,
                         sessionType = sessionType,
                         isAppAudio = false,
-                        isBroadcast = 0
+                        isBroadcast = 0,
+                        customDataPacket = (activity as DashBoardActivity).callerName
                     )
                 )
             }

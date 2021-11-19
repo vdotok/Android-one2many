@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.vdotok.one2many.R
 import com.vdotok.one2many.databinding.UserRowBinding
 import com.vdotok.one2many.extensions.showSnackBar
-import com.vdotok.one2many.models.UserModel
+import com.vdotok.network.models.UserModel
 import com.vdotok.one2many.utils.ApplicationConstants.MAX_PARTICIPANTS
 
 

@@ -12,9 +12,7 @@ fun Activity.hasNetworkAvailable(): Boolean {
     return (network != null)
 }
 
-fun Activity.isInternetAvailable(): Boolean {
-    return ConnectivityStatus.isConnected(this)
-}
+
 
 
 fun View.disableDoubleClick() {

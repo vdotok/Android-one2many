@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
+import com.vdotok.network.models.GroupModel
 import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.enums.CallType
 import com.vdotok.streaming.enums.MediaType
@@ -30,7 +31,6 @@ import com.vdotok.one2many.extensions.hide
 import com.vdotok.one2many.extensions.showSnackBar
 import com.vdotok.one2many.fragments.CallMangerListenerFragment
 import com.vdotok.one2many.models.AcceptCallModel
-import com.vdotok.one2many.models.GroupModel
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.service.ProjectionService
 import com.vdotok.one2many.ui.account.AccountsActivity
@@ -83,7 +83,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
         activity?.runOnUiThread {
             val bundle = Bundle()
             bundle.putParcelableArrayList("grouplist", groupList)
-            bundle.putString("userName", getUsername(model.refId))
+            bundle.putString("userName", model.customDataPacket?.toString())
             bundle.putParcelable(AcceptCallModel.TAG, model)
             bundle.putBoolean("isIncoming", true)
             bundle.putBoolean(DialCallFragment.IS_VIDEO_CALL, model.mediaType == MediaType.VIDEO)
@@ -98,10 +98,6 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
     override fun outGoingCall(toPeer: GroupModel) {
     }
 
-
-//    override fun onRemoteStreamReceived(stream: VideoTrack, refId: String, sessionID: String) {
-//        TODO("Not yet implemented")
-//    }
 
     override fun onCameraStreamReceived(stream: VideoTrack) {
 //        TODO("Not yet implemented")
@@ -158,7 +154,8 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                         refId = it.refId!!,
                         toRefIds = refIdList,
                         callType = CallType.ONE_TO_MANY,
-                        isAppAudio = isInternalAudioIncluded
+                        isAppAudio = isInternalAudioIncluded,
+                        customDataPacket = (activity as DashBoardActivity).callerName
                     ),
                     mediaProjection,
                     isGroupSession
@@ -207,17 +204,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
     }
 
     override fun checkCallType() {
-//        if ((screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
-//            || (screenSharingApp && isInternalAudioIncluded)) {
-//            moveToDashboard()
-//        }
-    }
-
-    private fun moveToDashboard() {
-        val startMain = Intent(Intent.ACTION_MAIN)
-        startMain.addCategory(Intent.CATEGORY_HOME)
-        startMain.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(startMain)
+//   TODO("Not yet implemented")
     }
 
     private fun init() {
@@ -348,7 +335,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
         groupList.let {
             it.forEach { name ->
                 name.participants.forEach { username->
-                    if (username.refId?.equals(refId) == true) {
+                    if (username.refID?.equals(refId) == true) {
                         user = username.fullname
                         return user
                     }
@@ -408,6 +395,8 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
 
 
     private fun checkVersionPublic() {
+        (activity as DashBoardActivity).incomingName = "Public Group"
+        (activity as DashBoardActivity).incomingUserName()
         if (screenSharingApp && cameraCall){
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q){
                 multiSelect = true
@@ -558,7 +547,8 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                         callType = CallType.ONE_TO_MANY,
                         sessionType = SessionType.SCREEN,
                         isAppAudio = isInternalAudioIncluded,
-                        isBroadcast = 1
+                        isBroadcast = 1,
+                        customDataPacket = (activity as DashBoardActivity).callerName
                         
                     ),
                     mediaProjection
@@ -586,7 +576,8 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                         callType = CallType.ONE_TO_MANY,
                         sessionType = sessionType,
                         isAppAudio = false,
-                        isBroadcast = 1
+                        isBroadcast = 1,
+                        customDataPacket = (activity as DashBoardActivity).callerName
                     )
                 )
             }

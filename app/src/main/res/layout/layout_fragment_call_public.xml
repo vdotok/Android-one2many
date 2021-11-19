@@ -29,65 +29,40 @@
             app:layout_constraintTop_toBottomOf="@id/tvUserName"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-        <ImageView
-            android:id="@+id/imgUserPhoto"
-            android:layout_width="63dp"
-            android:layout_height="63dp"
-            android:src="@drawable/ic_user_icon"
-            app:layout_constraintTop_toBottomOf="@id/tvUserName"
-            app:layout_constraintBottom_toTopOf="@+id/bottomBar"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
         <TextView
-            android:id="@+id/tvUserText"
+            android:id="@+id/tv_screen"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:gravity="center_horizontal"
-            style="@style/Text_Call_Name"
-            android:layout_marginEnd="10dp"
-            tools:text="user name"
-            app:layout_constraintTop_toBottomOf="@id/imgUserPhoto"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:layout_height="0dp"
+            android:textColor="@color/white"
+            android:text="@string/broad_casting_screen_sharing"
+            android:background="@color/grayish_1"
+            android:gravity="center"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <androidx.constraintlayout.widget.Group
-            android:id="@+id/groupAudioCall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:constraint_referenced_ids="tvUserText, imgUserPhoto" />
 
-        <org.webrtc.SurfaceViewRenderer
+        <com.vdotok.streaming.views.CallViewRenderer
             android:id="@+id/remoteView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginTop="10dp"
-            android:elevation="0dp"
-            app:layout_constraintTop_toBottomOf="@id/tvUserName"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:avatar="@drawable/ic_user_icon"
+            />
 
-        <org.webrtc.SurfaceViewRenderer
+        <com.vdotok.streaming.views.CallViewRenderer
             android:id="@+id/localView"
-            android:layout_width="140dp"
-            android:layout_height="175dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginBottom="130dp"
-            android:elevation="1dp"
-            android:focusable="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            android:layout_width="130dp"
+            android:layout_height="170dp"
+            android:layout_gravity="center"
+            app:layout_constraintBottom_toTopOf="@+id/bottomBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:avatar="@drawable/ic_user_icon"
+            />
 
-        <View
-            android:id="@+id/clickVideoView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:elevation="10dp"
-            app:layout_constraintStart_toStartOf="@+id/localView"
-            app:layout_constraintEnd_toEndOf="@+id/localView"
-            app:layout_constraintTop_toTopOf="@+id/localView"
-            app:layout_constraintBottom_toBottomOf="@+id/localView" />
 
         <View
             android:layout_height="0dp"
@@ -238,24 +213,6 @@
             app:layout_constraintStart_toStartOf="@id/tvTime"
             app:layout_constraintEnd_toEndOf="@id/tvTime" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-<!--        <androidx.cardview.widget.CardView-->
-<!--            android:id="@+id/localViewCard"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:elevation="10dp"-->
-<!--            android:layout_gravity="bottom|end"-->
-<!--            android:layout_marginEnd="20dp"-->
-<!--            android:layout_marginBottom="130dp">-->
-
-<!--            <org.webrtc.SurfaceViewRenderer-->
-<!--                android:id="@+id/localView"-->
-<!--                android:layout_width="130dp"-->
-<!--                android:layout_height="170dp"-->
-<!--                android:elevation="10dp"-->
-<!--                android:focusable="true"/>-->
-
-<!--        </androidx.cardview.widget.CardView>-->
 
     </FrameLayout>
 </layout>

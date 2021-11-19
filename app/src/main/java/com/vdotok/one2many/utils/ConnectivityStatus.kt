@@ -1,16 +1,15 @@
 package com.vdotok.one2many.utils
 
 import android.content.Context
+import android.content.ContextWrapper
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkInfo
 import android.os.Build
 
-class ConnectivityStatus {
+class ConnectivityStatus(val context: Context) : ContextWrapper(context) {
 
-    companion  object {
-
-        fun isConnected(context: Context) : Boolean {
+        fun isConnected() : Boolean {
             var result = false
             val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             when {
@@ -44,5 +43,5 @@ class ConnectivityStatus {
             }
             return result
         }
-    }
+
 }

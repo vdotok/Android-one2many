@@ -13,31 +13,24 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.ObservableField
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import com.google.android.material.snackbar.Snackbar
+import com.vdotok.network.models.*
 import com.vdotok.one2many.R
 import com.vdotok.one2many.adapter.AllUserListAdapter
 import com.vdotok.one2many.adapter.OnInboxItemClickCallbackListener
 import com.vdotok.one2many.databinding.FragmentUserListBinding
 import com.vdotok.one2many.dialogs.CreateGroupDialog
 import com.vdotok.one2many.extensions.*
-import com.vdotok.one2many.models.AllGroupsResponse
-import com.vdotok.one2many.models.CreateGroupModel
-import com.vdotok.one2many.models.GetAllUsersResponseModel
-import com.vdotok.one2many.models.UserModel
-import com.vdotok.one2many.network.ApiService
-import com.vdotok.one2many.network.HttpResponseCodes
-import com.vdotok.one2many.network.Result
-import com.vdotok.one2many.network.RetrofitBuilder
 import com.vdotok.one2many.prefs.Prefs
-import com.vdotok.one2many.utils.ApplicationConstants
 import com.vdotok.one2many.utils.ApplicationConstants.API_ERROR
 import com.vdotok.one2many.utils.ViewUtils.setStatusBarGradient
-import com.vdotok.one2many.utils.safeApiCall
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.vdotok.network.network.Result
+import com.vdotok.one2many.ui.dashboard.AllUserViewModel
+import com.vdotok.one2many.utils.isInternetAvailable
+import com.vdotok.network.network.HttpResponseCodes
+import com.vdotok.network.network.NetworkConnectivity
 import retrofit2.HttpException
 /**
  * Created By: VdoTok
@@ -57,6 +50,7 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
     var cameraCall :Boolean = false
     var isVideo :Boolean = true
     var isInternalAudioIncluded :Boolean = false
+    private val viewModel : AllUserViewModel by viewModels()
 
 
     override fun onCreateView(
@@ -172,39 +166,23 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
      * Function to call api for creating a group on server
      * */
     private fun createGroupApiCall(model: CreateGroupModel) {
-        activity?.let {
-            binding.progressBar.toggleVisibility()
-            val apiService: ApiService =
-                RetrofitBuilder.makeRetrofitService(it)
-            prefs.loginInfo?.authToken.let {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val response =
-                        safeApiCall { apiService.createGroup(auth_token = "Bearer $it", model) }
-                    withContext(Dispatchers.Main) {
-                        try {
-                            when (response) {
-                                is Result.Success -> {
-                                    Snackbar.make(
-                                        binding.root,
-                                        R.string.group_created,
-                                        Snackbar.LENGTH_LONG
-                                    ).show()
-                                    handleCreateGroupSuccess(response.data)
-                                }
-                                is Result.Error -> {
-                                    if (response.error.responseCode == ApplicationConstants.HTTP_CODE_NO_NETWORK) {
-                                        binding.root.showSnackBar(getString(R.string.no_network_available))
-                                    } else {
-                                        binding.root.showSnackBar(response.error.message)
-                                    }
-                                }
-                            }
-                        } catch (e: HttpException) {
-                            Log.e(API_ERROR, "signUpUser: ${e.printStackTrace()}")
-                        } catch (e: Throwable) {
-                            Log.e(API_ERROR, "signUpUser: ${e.printStackTrace()}")
-                        }
+        binding.progressBar.toggleVisibility()
+
+        activity?.let { activity ->
+            viewModel.createGroup("Bearer ${prefs.loginInfo?.authToken}", model).observe(activity) {
+                binding.progressBar.toggleVisibility()
+                when (it) {
+                    Result.Loading -> {
                         binding.progressBar.toggleVisibility()
+                    }
+                    is Result.Success ->  {
+                        Snackbar.make(binding.root, R.string.group_created, Snackbar.LENGTH_LONG).show()
+                        handleCreateGroupSuccess(it.data)
+                    }
+                    is Result.Failure -> {
+                        binding.progressBar.toggleVisibility()
+                        if(NetworkConnectivity.isNetworkAvailable(activity).not())
+                            binding.root.showSnackBar(getString(R.string.no_internet))
                     }
                 }
             }
@@ -212,9 +190,9 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
     }
 
 
-    private fun handleCreateGroupSuccess(response: AllGroupsResponse) {
+    private fun handleCreateGroupSuccess(response: CreateGroupResponse) {
         when(response.status) {
-            HttpResponseCodes.SUCCESS.value.toInt() -> {
+            HttpResponseCodes.SUCCESS.value -> {
                 activity?.hideKeyboard()
                 Handler(Looper.getMainLooper()).postDelayed({
                     openGroupFragment(screenSharingApp,screenSharingMic,cameraCall,isInternalAudioIncluded)
@@ -233,7 +211,7 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
     private fun getParticipantsIds(selectedUsersList: List<UserModel>): ArrayList<Int> {
         val list: ArrayList<Int> = ArrayList()
         selectedUsersList.forEach { userModel ->
-            userModel.userId?.let { list.add(it.toInt()) }
+            userModel.id?.let { list.add(it.toInt()) }
         }
         return list
     }
@@ -261,35 +239,41 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
      * Function to call api for getting all user on server
      * */
     private fun getAllUsers() {
-        activity?.let {
-            binding.progressBar.toggleVisibility()
-            val apiService: ApiService = RetrofitBuilder.makeRetrofitService(it)
+        activity?.let { activity ->
+
             prefs.loginInfo?.authToken.let {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val response = safeApiCall { apiService.getAllUsers(auth_token = "Bearer $it") }
-                    withContext(Dispatchers.Main) {
-                        try {
-                            when (response) {
-                                is Result.Success -> {
-                                    handleAllUsersResponse(response.data)
-                                }
-                                is Result.Error -> {
-                                    if (response.error.responseCode == ApplicationConstants.HTTP_CODE_NO_NETWORK) {
-                                        binding.root.showSnackBar(getString(R.string.no_network_available))
-                                    } else {
-                                        binding.root.showSnackBar(response.error.message)
-                                    }
-                                }
+
+                viewModel.getAllUsers(this.requireContext(), "Bearer $it").observe(viewLifecycleOwner, {
+                    try {
+                        when (it) {
+                            is Result.Loading -> {
+
+                                binding.swipeRefreshLay.isRefreshing = false
+                                binding.progressBar.toggleVisibility()
+
                             }
-                        } catch (e: HttpException) {
-                            Log.e(API_ERROR, "signUpUser: ${e.printStackTrace()}")
-                        } catch (e: Throwable) {
-                            Log.e(API_ERROR, "signUpUser: ${e.printStackTrace()}")
+                            is Result.Success -> {
+                                binding.progressBar.toggleVisibility()
+
+                                handleAllUsersResponse(it.data)
+                            }
+                            is Result.Failure -> {
+                                binding.swipeRefreshLay.isRefreshing = false
+                                binding.progressBar.toggleVisibility()
+                                Log.e(API_ERROR, it.exception.message ?: "")
+                                if (isInternetAvailable(activity as Context).not())
+                                    binding.root.showSnackBar(getString(R.string.no_network_available))
+                                else
+                                    binding.root.showSnackBar(it.exception.message)
+                            }
                         }
-                        binding.progressBar.toggleVisibility()
-                        binding.swipeRefreshLay.isRefreshing = false
+
+                    } catch (e: HttpException) {
+                        Log.e(API_ERROR, "AllUserList: ${e.printStackTrace()}")
+                    } catch (e: Throwable) {
+                        Log.e(API_ERROR, "AllUserList: ${e.printStackTrace()}")
                     }
-                }
+                })
             }
         }
     }

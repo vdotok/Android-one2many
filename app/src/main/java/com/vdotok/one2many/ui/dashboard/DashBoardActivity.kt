@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioManager
 import android.media.projection.MediaProjection
 import android.os.Bundle
 import android.os.Handler
@@ -16,11 +17,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
+import com.google.android.material.snackbar.Snackbar
+import com.vdotok.network.models.LoginResponse
+import com.google.gson.Gson
+import com.vdotok.network.models.CallerData
 import com.vdotok.one2many.R
+import com.vdotok.one2many.base.BaseActivity
 import com.vdotok.one2many.databinding.ActivityDashBoardBinding
 import com.vdotok.one2many.interfaces.FragmentRefreshListener
-import com.vdotok.one2many.models.LoginResponse
-import com.vdotok.one2many.models.MediaServerMap
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.utils.ApplicationConstants
 import com.vdotok.one2many.utils.NetworkStatusLiveData
@@ -34,7 +38,9 @@ import com.vdotok.streaming.enums.RegistrationStatus
 import com.vdotok.streaming.enums.SessionType
 import com.vdotok.streaming.interfaces.CallSDKListener
 import com.vdotok.streaming.models.*
+import com.vdotok.streaming.utils.checkInternetAvailable
 import kotlinx.android.synthetic.main.layout_fragment_call.*
+import org.json.JSONObject
 import org.webrtc.VideoTrack
 
 /**
@@ -46,20 +52,27 @@ import org.webrtc.VideoTrack
 class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     private lateinit var binding: ActivityDashBoardBinding
+
     var localStreamScreen: VideoTrack? = null
     var localStreamVideo: VideoTrack? = null
-
-    lateinit var callClient: CallClient
-    private lateinit var prefs: Prefs
     var sessionId: String? = null
     var sessionId2: String? = null
     var sessionCount = 0
     var streamCount = 1
+    lateinit var callClient: CallClient
+    lateinit var prefs: Prefs
+    var isInternetConnectionRestored = false
+
     var isCallInitiator = false
     var isCallInitiator2 = false
-    private var internetConnectionRestored = false
     var mListener: FragmentRefreshListener? = null
+
     private lateinit var mLiveDataNetwork: NetworkStatusLiveData
+    private var audioManager: AudioManager? = null
+    private var isResumeState = false
+    private var reConnectStatus = false
+    var incomingName :String? = null
+
     var callParams1: CallParams? = null
     var callParams2: CallParams? = null
     var participantList: ArrayList<String>? = null
@@ -67,9 +80,13 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     var isMulti = false
     var handler: Handler? = null
 
-    private val mLiveDataEndCall: MutableLiveData<Boolean> by lazy {
+    val mLiveDataEndCall: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>()
     }
+
+    val gson = Gson()
+    var callerName: JSONObject = JSONObject()
+
 
     private val mLiveDataLeftParticipant: MutableLiveData<String> by lazy {
         MutableLiveData<String>()
@@ -85,6 +102,85 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         initCallClient()
         addInternetConnectionObserver()
         askForPermissions()
+        initCallObserver()
+    }
+
+
+    fun initCallClient() {
+
+        CallClient.getInstance(this)?.setConstants(ApplicationConstants.SDK_PROJECT_ID)
+        CallClient.getInstance(this)?.let {
+            callClient = it
+            callClient.setListener(this)
+        }
+        connectClient()
+    }
+
+    fun addInternetConnectionObserver() {
+        mLiveDataNetwork = NetworkStatusLiveData(this.application)
+
+        mLiveDataNetwork.observe(this, { isInternetConnected ->
+            when {
+                isInternetConnected == true && isInternetConnectionRestored && !isResumeState -> {
+                    Log.e("Internet", "internet connection restored!")
+                    performSocketReconnection()
+                }
+                isInternetConnected == false -> {
+                    isInternetConnectionRestored = true
+                    reConnectStatus = true
+                    isResumeState = false
+                    Log.e("Internet", "internet connection lost!")
+                }
+                else -> {
+                }
+            }
+        })
+    }
+
+    private fun performSocketReconnection() {
+        prefs.loginInfo?.let { loginResponse ->
+            if (checkInternetAvailable(this)) {
+                loginResponse.mediaServer?.let {
+                    callClient.connect(getMediaServerAddress(it), it.endPoint)
+                }
+            } else {
+                binding
+                Snackbar.make(
+                    binding.root,
+                    getString(R.string.socket_connection_failed),
+                    Snackbar.LENGTH_LONG
+                ).show()
+            }
+        } ?: kotlin.run {
+            Snackbar.make(
+                binding.root,
+                (getString(R.string.socket_connected)),
+                Snackbar.LENGTH_LONG
+            ).show()
+
+            Snackbar.make(
+                binding.root,
+                getString(R.string.no_user_data_found),
+                Snackbar.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    fun connectClient() {
+        prefs.loginInfo?.mediaServer?.let {
+            if (callClient.isConnected() == null || !callClient.isConnected())
+                callClient.connect(
+                    getMediaServerAddress(it),
+                    it.endPoint
+                )
+        }
+    }
+
+    fun incomingUserName() {
+        val callerData = CallerData(
+            calleName = incomingName
+        )
+        callerName = JSONObject(gson.toJson(callerData))
     }
 
     /**
@@ -119,25 +215,14 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         }
     }
 
-    /**
-     * function to connect socket successfully
-     * */
 
-    private fun initCallClient() {
-        handler = Handler(Looper.getMainLooper())
-        CallClient.getInstance(this)?.setConstants(ApplicationConstants.SDK_PROJECT_ID)
-        CallClient.getInstance(this)?.let {
-            callClient = it
-            callClient.setListener(this)
-        }
-
-        connectClient()
-
+    private fun initCallObserver(){
         mLiveDataEndCall.observe(this, {
             if (it) {
                 callParams1 = null
                 callParams2 = null
                 sessionId = null
+                incomingName = null
                 sessionId2 = null
                 mListener?.onCallEnd()
             }
@@ -148,21 +233,10 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
         })
 
-
     }
 
 
-    fun connectClient() {
-        prefs.loginInfo?.mediaServerMap?.let {
-            if (callClient.isConnected() == null || !callClient.isConnected())
-                callClient.connect(
-                    getMediaServerAddress(it),
-                    it.endPoint
-                )
-        }
-    }
-
-    private fun getMediaServerAddress(mediaServer: MediaServerMap): String {
+    private fun getMediaServerAddress(mediaServer: LoginResponse.MediaServerMap): String {
         return "https://${mediaServer.host}:${mediaServer.port}"
     }
 
@@ -239,14 +313,15 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                     runOnUiThread {
                         callClient.register(
                             authToken = it.authorizationToken!!,
-                            refId = it.refId!!, 0
+                            refId = it.refId!!, reconnectStatus = if (reConnectStatus) 1 else 0
                         )
+                      reConnectStatus = false
                     }
                 }
             }
             EnumConnectionStatus.NOT_CONNECTED -> {
                 mListener?.onConnectionFail()
-                prefs.loginInfo?.mediaServerMap?.let {
+                prefs.loginInfo?.mediaServer?.let {
                     callClient.connect(
                         getMediaServerAddress(it),
                         it.endPoint
@@ -259,7 +334,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
             EnumConnectionStatus.ERROR -> {
                 mListener?.onConnectionFail()
-                prefs.loginInfo?.mediaServerMap?.let {
+                prefs.loginInfo?.mediaServer?.let {
                     callClient.connect(
                         getMediaServerAddress(it),
                         it.endPoint
@@ -303,21 +378,12 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     override fun incomingCall(callParams: CallParams) {
+        if (callParams.customDataPacket != null) {
+            val dataValue = JSONObject(callParams.customDataPacket.toString())
+            val callerName: CallerData = gson.fromJson(dataValue.toString(), CallerData::class.java)
+            callParams.customDataPacket = callerName.calleName
+        }
         isCallInitiator = false
-
-//        if (callParams1 == null) {
-//            callParams1 = callParams
-//            mListener?.onIncomingCall(callParams)
-//        } else {
-//            callParams2 = callParams
-//            callParams2?.let { callParam ->
-//                prefs.loginInfo?.let {
-//                    Handler(Looper.getMainLooper()).postDelayed({
-//                        sessionId2 = callClient.acceptIncomingCall(it.refId.toString(), callParam)
-//                    }, 3000)
-//                }
-//            }
-//        }
 
         if (callParams1 == null) {
             callParams1 = callParams.copy()
@@ -331,7 +397,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             callParams1?.let {
                 mListener?.onIncomingCall(it)
             }
-        } else if (callParams1 != null && !isMultiSession) {
+        } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUUID.isEmpty()) {
             callParams1?.let {
                 mListener?.onIncomingCall(it)
             }
@@ -344,11 +410,18 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     override fun onDestroy() {
+        isResumeState = false
         callParams1 = null
         callParams2 = null
         callClient.disConnectSocket()
         super.onDestroy()
     }
+
+    override fun onResume() {
+        isResumeState = true
+        askForPermissions()
+        super.onResume()
+     }
 
     fun acceptMultiCall() {
         prefs.loginInfo?.let {
@@ -357,8 +430,14 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
             isMultiSession = false
         }
-
     }
+
+    private fun turnSpeakerOff() {
+          audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+          audioManager?.let {
+          it.isSpeakerphoneOn = false
+        }
+     }
 
     fun acceptIncomingCall(callParams: CallParams) {
         prefs.loginInfo?.let {
@@ -411,15 +490,17 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     fun endCall() {
+        turnSpeakerOff()
+        incomingName = null
         isMulti = false
         localStreamVideo = null
         localStreamScreen = null
         localView?.let {
-            localView.clearImage()
+           // localView.clearImage()
             localView.release()
         }
         remoteView?.let {
-            remoteView.clearImage()
+          //  remoteView.clearImage()
             remoteView.release()
         }
         val sessionList = ArrayList<String>().apply {
@@ -517,6 +598,33 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         mListener?.acceptedUser(participantCount)
     }
 
+    override fun registrationStatus(registerResponse: RegisterResponse) {
+
+        when (registerResponse.registrationStatus) {
+            RegistrationStatus.REGISTER_SUCCESS -> {
+
+                val userModel: LoginResponse? = prefs.loginInfo
+                userModel?.mcToken = registerResponse.mcToken.toString()
+                runOnUiThread {
+                    userModel?.let {
+                        prefs.loginInfo = it
+                    }
+                    if (registerResponse.reConnectStatus == 1) {
+                        callClient.initiateReInviteProcess()
+                    }
+                }
+
+            }
+            RegistrationStatus.UN_REGISTER,
+            RegistrationStatus.REGISTER_FAILURE,
+            RegistrationStatus.INVALID_REGISTRATION -> {
+                Handler(Looper.getMainLooper()).post {
+                    Log.e("register", "message: ${registerResponse.responseMessage}")
+                }
+            }
+        }
+    }
+
 
     override fun callStatus(callInfoResponse: CallInfoResponse) {
 
@@ -545,6 +653,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
             CallStatus.OUTGOING_CALL_ENDED,
             CallStatus.NO_SESSION_EXISTS -> {
+                turnSpeakerOff()
                 isMulti = false
                 mLiveDataEndCall.postValue(true)
             }
@@ -554,6 +663,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                         mLiveDataEndCall.postValue(true)
                 } ?: kotlin.run {
                     mListener?.onCallMissed()
+                    mLiveDataEndCall.postValue(true)
                 }
             }
             CallStatus.PARTICIPANT_LEFT_CALL -> {
@@ -566,31 +676,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
         }
 
-
-    }
-
-    override fun registrationStatus(registerResponse: RegisterResponse) {
-        when (registerResponse.registrationStatus) {
-            RegistrationStatus.REGISTER_SUCCESS -> {
-
-                val userModel: LoginResponse? = prefs.loginInfo
-                userModel?.mcToken = registerResponse.mcToken.toString()
-                runOnUiThread {
-                    userModel?.let {
-                        prefs.loginInfo = it
-                    }
-//                    binding.root.showSnackBar("Socket Connected!")
-                }
-
-            }
-            RegistrationStatus.UN_REGISTER,
-            RegistrationStatus.REGISTER_FAILURE,
-            RegistrationStatus.INVALID_REGISTRATION -> {
-                Handler(Looper.getMainLooper()).post {
-                    Log.e("register", "message: ${registerResponse.responseMessage}")
-                }
-            }
-        }
 
     }
 
@@ -625,29 +710,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         mListener?.onCameraStreamReceived(stream)
     }
 
-    private fun addInternetConnectionObserver() {
-        mLiveDataNetwork = NetworkStatusLiveData(this.application)
-
-        mLiveDataNetwork.observe(this, { isInternetConnected ->
-            when {
-                isInternetConnected == true && internetConnectionRestored -> {
-                    connectClient()
-                    mListener?.onConnectionSuccess()
-                }
-                isInternetConnected == false -> {
-                    internetConnectionRestored = true
-                    mListener?.onCallEnd()
-                    mListener?.onConnectionFail()
-                }
-                else -> {
-                }
-            }
-        })
-    }
-
-    override fun memoryUsageDetails(memoryUsage: Long) {
-//        TODO("Not yet implemented")
-    }
 
     override fun sendCurrentDataUsage(sessionKey: String, usage: Usage) {
         prefs.loginInfo?.refId?.let { refId ->

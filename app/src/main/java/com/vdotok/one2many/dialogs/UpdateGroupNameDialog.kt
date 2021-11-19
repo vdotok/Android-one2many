@@ -3,37 +3,31 @@ package com.vdotok.one2many.dialogs
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import androidx.databinding.ObservableField
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.viewModels
 import com.vdotok.one2many.R
 import com.vdotok.one2many.databinding.UpdateGroupNameBinding
 import com.vdotok.one2many.extensions.showSnackBar
 import com.vdotok.one2many.extensions.toggleVisibility
-import com.vdotok.one2many.models.GroupModel
-import com.vdotok.one2many.models.UpdateGroupNameModel
-import com.vdotok.one2many.network.ApiService
-import com.vdotok.one2many.network.Result
-import com.vdotok.one2many.network.RetrofitBuilder
 import com.vdotok.one2many.prefs.Prefs
-import com.vdotok.one2many.utils.ApplicationConstants
-import com.vdotok.one2many.utils.isInternetAvailable
-import com.vdotok.one2many.utils.safeApiCall
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import retrofit2.HttpException
+import com.vdotok.network.network.Result
+import com.vdotok.network.models.GroupModel
+import com.vdotok.network.models.UpdateGroupNameModel
+import com.vdotok.network.network.NetworkConnectivity
+import com.vdotok.one2many.ui.dashboard.AllUserViewModel
 
-class UpdateGroupNameDialog(private val groupModel: GroupModel, private val updateGroup : () -> Unit) : DialogFragment(){
+class UpdateGroupNameDialog(private val groupModel: GroupModel, private val updateGroup: () -> Unit) : DialogFragment(){
 
     private lateinit var binding: UpdateGroupNameBinding
     private lateinit var prefs: Prefs
     var edtGroupName = ObservableField<String>()
+    private val viewModel : AllUserViewModel by viewModels()
+
 
 
     init {
@@ -70,8 +64,6 @@ class UpdateGroupNameDialog(private val groupModel: GroupModel, private val upda
                     model.groupId = groupModel.id
                     model.groupTitle = edtGroupName.get()
                     editGroup(model)
-                    dismiss()
-                    updateGroup.invoke()
                 } else {
                     binding.root.showSnackBar(R.string.group_name_empty)
                 }
@@ -82,31 +74,20 @@ class UpdateGroupNameDialog(private val groupModel: GroupModel, private val upda
     }
 
     private fun editGroup(model: UpdateGroupNameModel) {
-        activity?.let {
-            binding.progressBar.toggleVisibility()
-            val apiService: ApiService = RetrofitBuilder.makeRetrofitService(it)
-            prefs.loginInfo?.authToken.let {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val response = safeApiCall { apiService.updateGroupName (auth_token = "Bearer $it",model = model)}
-                    withContext(Dispatchers.Main) {
-                        try {
-                            when (response) {
-                                is Result.Success -> {
-                                    binding.root.showSnackBar(getString(R.string.group_deleted))
-                                }
-                                is Result.Error -> {
-                                    if (activity?.isInternetAvailable()?.not() == true)
-                                        binding.root.showSnackBar(getString(R.string.no_network_available))
-                                    else
-                                        binding.root.showSnackBar(response.error.message)
-                                }
-                            }
-                        } catch (e: HttpException) {
-                            Log.e(ApplicationConstants.API_ERROR, "signUpUser: ${e.printStackTrace()}")
-                        } catch (e: Throwable) {
-                            Log.e(ApplicationConstants.API_ERROR, "signUpUser: ${e.printStackTrace()}")
-                        }
+        activity?.let { activity ->
+            viewModel.updateGroupName("Bearer ${prefs.loginInfo?.authToken}", model).observe(activity) {
+                when (it) {
+                    Result.Loading -> {
                         binding.progressBar.toggleVisibility()
+                    }
+                    is Result.Success ->  {
+                        updateGroup.invoke()
+                        dismiss()
+                    }
+                    is Result.Failure -> {
+                        binding.progressBar.toggleVisibility()
+                        if(NetworkConnectivity.isNetworkAvailable(activity).not())
+                            binding.root.showSnackBar(getString(R.string.no_internet))
                     }
                 }
             }

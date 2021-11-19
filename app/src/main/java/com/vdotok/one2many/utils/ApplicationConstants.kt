@@ -8,12 +8,11 @@ package com.vdotok.one2many.utils
 object ApplicationConstants {
 
 //    API CONSTANTS
-    const val API_BASE_URL = "https://tenant-api.vdotok.dev/"
+    const val API_BASE_URL = "https://stenant.vdotok.dev/"
     const val API_VERSION = "v0/"
 
 //    SDK AUTH PARAMS
-    const val SDK_AUTH_TOKEN = "3d9686b635b15b5bc2d19800407609fa"
-    const val SDK_PROJECT_ID = "Add your project key here"
+    const val SDK_PROJECT_ID = "Please add your project id here"
 
 //    PREFS CONSTANTS
     const val isLogin = "isLogin"
@@ -28,6 +27,7 @@ object ApplicationConstants {
 
 //    GROUP CONSTANTS
     const val MAX_PARTICIPANTS = 4 // max limit is 4 so including current user we can add up to 3 more users in a group
+
 
     // This error code means a local error occurred while parsing the received json.
 

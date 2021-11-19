@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
+import com.vdotok.network.models.GroupModel
 import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.enums.CallType
 import com.vdotok.streaming.enums.MediaType
@@ -25,7 +26,6 @@ import com.vdotok.one2many.extensions.launchPeriodicAsync
 import com.vdotok.one2many.extensions.show
 import com.vdotok.one2many.fragments.CallMangerListenerFragment
 import com.vdotok.one2many.models.AcceptCallModel
-import com.vdotok.one2many.models.GroupModel
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.performSingleClick
@@ -139,7 +139,7 @@ class DialCallFragment : CallMangerListenerFragment() {
         getUsername()
         refList.clear()
         groupModel?.participants?.forEach {
-            refList.add(it.refId!!)
+            refList.add(it.refID!!)
         }
         binding.imgCallAccept.hide()
         binding.imgmic.show()
@@ -209,6 +209,7 @@ class DialCallFragment : CallMangerListenerFragment() {
 
     fun rejectCall() {
         timerFro30sec?.cancel()
+        (activity as DashBoardActivity).mLiveDataEndCall.postValue(true)
         if (isIncomingCall) {
             prefs.loginInfo?.let {
                 acceptCallModel?.let { it1 -> callClient.rejectIncomingCall(
@@ -343,10 +344,6 @@ class DialCallFragment : CallMangerListenerFragment() {
     }
 
     override fun checkCallType() {
-//        if ((screenSharingApp && isInternalAudioIncluded && cameraCall) || (screenSharingMic && !isInternalAudioIncluded && cameraCall)
-//            ||(screenSharingApp && !isInternalAudioIncluded && cameraCall)) {
-//            dialOneToManyVideoCall(mediaType = MediaType.VIDEO,sessionType = SessionType.CALL, groupModel!!)
-//        }
         if ((screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
             || (screenSharingApp && isInternalAudioIncluded)){
             moveToDashboard()
@@ -364,31 +361,6 @@ class DialCallFragment : CallMangerListenerFragment() {
             (activity as DashBoardActivity).callParams1 = null
             Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
             onCallEnd()
-        }
-    }
-    private fun dialOneToManyVideoCall(mediaType: MediaType, sessionType: SessionType, groupModel: GroupModel) {
-
-        val refIdList = groupModel.participants.map { it.refId } as java.util.ArrayList<String>
-        refIdList.remove(prefs.loginInfo?.refId)
-
-        if (callClient.isConnected() == true) {
-
-            prefs.loginInfo?.let {
-                (activity as DashBoardActivity).dialOne2ManyVideoCall(
-                    CallParams(
-                        refId = it.refId!!,
-                        toRefIds = refIdList,
-                        mcToken = it.mcToken!!,
-                        mediaType = mediaType,
-                        callType = CallType.ONE_TO_MANY,
-                        sessionType = sessionType,
-                        isAppAudio = isInternalAudioIncluded,
-                        isBroadcast = 0
-                    )
-                )
-            }
-        } else {
-            (activity as DashBoardActivity).connectClient()
         }
     }
 }

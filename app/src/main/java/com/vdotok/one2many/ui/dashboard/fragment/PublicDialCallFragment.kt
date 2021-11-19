@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
+import com.vdotok.network.models.GroupModel
 import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.models.CallParams
 import com.vdotok.streaming.models.SessionStateInfo
@@ -21,7 +22,6 @@ import com.vdotok.one2many.extensions.hide
 import com.vdotok.one2many.extensions.show
 import com.vdotok.one2many.extensions.showSnackBar
 import com.vdotok.one2many.fragments.CallMangerListenerFragment
-import com.vdotok.one2many.models.GroupModel
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.performSingleClick
@@ -244,12 +244,6 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
         //        TODO("Not yet implemented")
     }
 
-    private fun moveToDashboard() {
-        val startMain = Intent(Intent.ACTION_MAIN)
-        startMain.addCategory(Intent.CATEGORY_HOME)
-        startMain.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(startMain)
-    }
     private fun closeFragmentWithMessage(message: String?) {
         activity?.runOnUiThread {
             Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()

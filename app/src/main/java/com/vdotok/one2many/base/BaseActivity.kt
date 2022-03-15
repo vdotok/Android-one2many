@@ -101,13 +101,12 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
     }
 
 
-    override fun onSessionReady(
-        mediaProjection: MediaProjection?,
-        isInternalAudioIncluded: Boolean
-    ) {
+    override fun onSessionReady(mediaProjection: MediaProjection?) {
+
     }
 
-    override fun participantCount(participantCount: Int) {
+    override fun participantCount(participantCount: Int, participantRefIdList: ArrayList<String>) {
+
     }
 
     override fun audioVideoState(state: SessionStateInfo) {

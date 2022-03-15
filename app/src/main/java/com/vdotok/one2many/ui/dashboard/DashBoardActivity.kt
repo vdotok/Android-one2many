@@ -478,8 +478,8 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
         val pair = callClient.startMultiSession(callParams, mediaProjection, isGroupSession)
 
-        callParams1?.sessionUUID = pair.first
-        callParams2?.sessionUUID = pair.second
+        callParams1?.sessionUUID = pair?.first.toString()
+        callParams2?.sessionUUID = pair?.second.toString()
     }
 
     fun dialOne2ManyVideoCall(callParams: CallParams) {
@@ -495,14 +495,14 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         isMulti = false
         localStreamVideo = null
         localStreamScreen = null
-        localView?.let {
-           // localView.clearImage()
-            localView.release()
-        }
-        remoteView?.let {
-          //  remoteView.clearImage()
-            remoteView.release()
-        }
+//        localView?.let {
+//           // localView.clearImage()
+//            localView.release()
+//        }
+//        remoteView?.let {
+//          //  remoteView.clearImage()
+//            remoteView.release()
+//        }
         val sessionList = ArrayList<String>().apply {
             callParams1?.sessionUUID?.let {
                 add(it)
@@ -590,11 +590,11 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         }
     }
 
-    override fun onSessionReady(mediaProjection: MediaProjection?, isInternalAudio: Boolean) {
+    override fun onSessionReady(mediaProjection: MediaProjection?) {
         runOnUiThread { mListener?.sessionStart(mediaProjection) }
     }
 
-    override fun participantCount(participantCount: Int) {
+    override fun participantCount(participantCount: Int, participantRefIdList: ArrayList<String>) {
         mListener?.acceptedUser(participantCount)
     }
 

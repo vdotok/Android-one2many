@@ -7,9 +7,6 @@ package com.vdotok.one2many.utils
  */
 object ApplicationConstants {
 
-//    API CONSTANTS
-    const val API_BASE_URL = "https://stenant.vdotok.dev/"
-    const val API_VERSION = "v0/"
 
 //    SDK AUTH PARAMS
     const val SDK_PROJECT_ID = "Please add your project id here"

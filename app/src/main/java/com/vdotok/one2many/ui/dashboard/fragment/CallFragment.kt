@@ -405,8 +405,11 @@ class CallFragment : CallMangerListenerFragment() {
             isSpeakerOff -> binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_off)
             else -> binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
         }
-
-        callClient.toggleSpeakerOnOff()
+            if (callClient.isSpeakerEnabled()){
+                callClient.setSpeakerEnable(false)
+              }else{
+                callClient.setSpeakerEnable(true)
+               }
     }
 
     companion object {
@@ -437,7 +440,7 @@ class CallFragment : CallMangerListenerFragment() {
                     binding.remoteView.getPreview().setMirror(false)
                     binding.remoteView.postDelayed({
                             isSpeakerOff = false
-                            callClient.toggleSpeakerOnOff()
+                            callClient.setSpeakerEnable(true)
                         }, 1000)
                         binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
                 } catch (e: Exception) {
@@ -451,7 +454,7 @@ class CallFragment : CallMangerListenerFragment() {
                     binding.remoteView.getPreview().setMirror(false)
                     binding.remoteView.postDelayed({
                         isSpeakerOff = false
-                        callClient.toggleSpeakerOnOff()
+                        callClient.setSpeakerEnable(true)
                     }, 1000)
                     binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
                 } catch (e: Exception) {
@@ -466,7 +469,7 @@ class CallFragment : CallMangerListenerFragment() {
                     stream.addSink(binding.localView.setView())
                     binding.remoteView.postDelayed({
                         isSpeakerOff = false
-                        callClient.toggleSpeakerOnOff()
+                        callClient.setSpeakerEnable(true)
                     }, 1000)
                     binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
 

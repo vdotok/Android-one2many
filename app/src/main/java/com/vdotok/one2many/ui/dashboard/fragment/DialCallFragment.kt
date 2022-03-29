@@ -329,6 +329,10 @@ class DialCallFragment : CallMangerListenerFragment() {
        closeFragmentWithMessage("Call Missed!")
     }
 
+    override fun onInsufficientBalance() {
+        closeFragmentWithMessage("Insufficient Balance!")
+    }
+
     override fun onCallEnd() {
         activity?.runOnUiThread {
             try {

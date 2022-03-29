@@ -30,4 +30,5 @@ interface FragmentRefreshListener {
     fun onParticipantLeftCall(refId: String?)
     fun sessionStart(mediaProjection: MediaProjection?)
     fun acceptedUser(participantCount: Int)
+    fun onInsufficientBalance(){}
 }

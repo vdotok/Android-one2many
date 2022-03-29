@@ -628,13 +628,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     override fun callStatus(callInfoResponse: CallInfoResponse) {
 
-        runOnUiThread {
-
-            Toast.makeText(
-                this,
-                "Call Status: ${callInfoResponse.callStatus}", Toast.LENGTH_SHORT
-            ).show()
-        }
         when (callInfoResponse.callStatus) {
             CallStatus.CALL_CONNECTED -> {
                 runOnUiThread {
@@ -671,6 +664,9 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
             CallStatus.NO_ANSWER_FROM_TARGET -> {
                 mLiveDataLeftParticipant.postValue(callInfoResponse.callParams?.toRefIds?.get(0))
+            }
+            CallStatus.INSUFFICIENT_BALANCE ->{
+                mListener?.onInsufficientBalance()
             }
             else -> {
             }

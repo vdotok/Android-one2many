@@ -545,6 +545,14 @@ class CallFragment : CallMangerListenerFragment() {
         } catch (e: Exception) {}
     }
 
+    override fun onInsufficientBalance() {
+        try {
+            listUser.clear()
+            (this.activity as DashBoardActivity).sessionId = null
+            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+        } catch (e: Exception) {}
+    }
+
     override fun onCallEnd() {
         try {
             listUser.clear()

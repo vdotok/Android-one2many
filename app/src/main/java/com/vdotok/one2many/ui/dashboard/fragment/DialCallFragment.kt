@@ -347,6 +347,10 @@ class DialCallFragment : CallMangerListenerFragment() {
        //// TODO("Not yet implemented")
     }
 
+    override fun onCallerAlreadyBusy() {
+        closeFragmentWithMessage("Target is busy!")
+    }
+
     override fun checkCallType() {
         if ((screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
             || (screenSharingApp && isInternalAudioIncluded)){

@@ -273,7 +273,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                         sessionType = SessionType.SCREEN,
                         isAppAudio = isInternalAudioIncluded,
                         isBroadcast = 0,
-                        customDataPacket = (activity as DashBoardActivity).callerName
+                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
                     ),
                     mediaProjection
                 )
@@ -454,7 +454,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                                 toRefIds = refIdList,
                                 callType = CallType.ONE_TO_MANY,
                                 isAppAudio = isInternalAudioIncluded,
-                                customDataPacket = (activity as DashBoardActivity).callerName
+                                customDataPacket = (activity as DashBoardActivity).callerName.toString()
                         ),
                         mediaProjection,
                         isGroupSession
@@ -515,7 +515,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                         sessionType = sessionType,
                         isAppAudio = false,
                         isBroadcast = 0,
-                        customDataPacket = (activity as DashBoardActivity).callerName
+                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
                     )
                 )
             }

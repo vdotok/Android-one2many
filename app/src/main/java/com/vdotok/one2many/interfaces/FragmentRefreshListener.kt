@@ -21,6 +21,7 @@ interface FragmentRefreshListener {
     fun onCameraStreamReceived(stream: VideoTrack)
     fun onCameraAudioOff(sessionStateInfo: SessionStateInfo, isMultySession: Boolean)
     fun onCallMissed()
+    fun onCallerAlreadyBusy() {}
     fun onCallRejected(reason: String)
     fun onCallEnd() {}
     fun onPublicURL(publicURL: String)

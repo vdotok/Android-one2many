@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.databinding.ObservableField
@@ -445,11 +446,15 @@ class PublicCallFragment : CallMangerListenerFragment() {
     }
 
     override fun onInsufficientBalance() {
-        try {
-            listUser.clear()
-            (this.activity as DashBoardActivity).sessionId = null
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
-        } catch (e: Exception) {}
+        closeFragmentWithMessage("Insufficient Balance!")
+    }
+
+    private fun closeFragmentWithMessage(message: String?) {
+        activity?.runOnUiThread {
+            (activity as DashBoardActivity).callParams1 = null
+            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+            onCallEnd()
+        }
     }
 
     override fun onCallEnd() {

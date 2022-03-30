@@ -384,24 +384,32 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             callParams.customDataPacket = callerName.calleName
         }
         isCallInitiator = false
-
-        if (callParams1 == null) {
-            callParams1 = callParams.copy()
+        if (sessionId?.let { callClient.getActiveSessionClient(it) } != null || sessionId2?.let {
+                callClient.getActiveSessionClient(
+                    it
+                )
+            } != null) {
+            callClient.sessionBusy(callParams.refId, callParams.sessionUUID)
         } else {
-            callParams2 = callParams.copy()
-            isMulti = true
-            isMultiSession = true
+            if (callParams1 == null) {
+                callParams1 = callParams.copy()
+            } else {
+                callParams2 = callParams.copy()
+                isMulti = true
+                isMultiSession = true
+            }
+
+            if ((callParams1 != null && callParams2 != null) && isMultiSession) {
+                callParams1?.let {
+                    mListener?.onIncomingCall(it)
+                }
+            } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUUID.isEmpty()) {
+                callParams1?.let {
+                    mListener?.onIncomingCall(it)
+                }
+            }
         }
 
-        if ((callParams1 != null && callParams2 != null) && isMultiSession) {
-            callParams1?.let {
-                mListener?.onIncomingCall(it)
-            }
-        } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUUID.isEmpty()) {
-            callParams1?.let {
-                mListener?.onIncomingCall(it)
-            }
-        }
 
         Log.e(
             "incomingCall",
@@ -644,6 +652,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
                 }
             }
+            CallStatus.SERVICE_SUSPENDED,
             CallStatus.OUTGOING_CALL_ENDED,
             CallStatus.NO_SESSION_EXISTS -> {
                 turnSpeakerOff()
@@ -667,6 +676,9 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
             CallStatus.INSUFFICIENT_BALANCE ->{
                 mListener?.onInsufficientBalance()
+            }
+            CallStatus.TARGET_IS_BUSY -> {
+                mListener?.onCallerAlreadyBusy()
             }
             else -> {
             }

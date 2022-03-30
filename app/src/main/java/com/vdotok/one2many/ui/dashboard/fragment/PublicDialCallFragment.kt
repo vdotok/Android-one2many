@@ -3,7 +3,6 @@ package com.vdotok.one2many.ui.dashboard.fragment
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.media.projection.MediaProjection
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -199,8 +198,6 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
         closeFragmentWithMessage("Call Missed!")
     }
 
-//    override fun onRemoteStreamReceived(stream: VideoTrack, refId: String, sessionID: String) {}
-
     override fun onCameraStreamReceived(stream: VideoTrack) {}
     override fun onCameraAudioOff(
         sessionStateInfo: SessionStateInfo, isMultySession: Boolean
@@ -235,6 +232,9 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
             }
         }
     }
+    override fun onCallerAlreadyBusy() {
+        closeFragmentWithMessage("Target is busy!")
+    }
 
     override fun onPublicURL(publicURL: String) {
        url = publicURL
@@ -242,6 +242,11 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
 
     override fun checkCallType() {
         //        TODO("Not yet implemented")
+    }
+
+
+    override fun onInsufficientBalance() {
+        closeFragmentWithMessage("Insufficient Balance!")
     }
 
     private fun closeFragmentWithMessage(message: String?) {

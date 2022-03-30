@@ -12,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
@@ -546,11 +547,7 @@ class CallFragment : CallMangerListenerFragment() {
     }
 
     override fun onInsufficientBalance() {
-        try {
-            listUser.clear()
-            (this.activity as DashBoardActivity).sessionId = null
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
-        } catch (e: Exception) {}
+        closeFragmentWithMessage("Insufficient Balance!")
     }
 
     override fun onCallEnd() {
@@ -678,6 +675,14 @@ class CallFragment : CallMangerListenerFragment() {
             .y(yPoint)
             .setDuration(200)
             .start()
+    }
+
+    private fun closeFragmentWithMessage(message: String?) {
+        activity?.runOnUiThread {
+            (activity as DashBoardActivity).callParams1 = null
+            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+            onCallEnd()
+        }
     }
 
 

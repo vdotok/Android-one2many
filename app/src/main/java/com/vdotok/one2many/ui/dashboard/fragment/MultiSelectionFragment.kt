@@ -155,7 +155,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                         toRefIds = refIdList,
                         callType = CallType.ONE_TO_MANY,
                         isAppAudio = isInternalAudioIncluded,
-                        customDataPacket = (activity as DashBoardActivity).callerName
+                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
                     ),
                     mediaProjection,
                     isGroupSession
@@ -548,7 +548,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                         sessionType = SessionType.SCREEN,
                         isAppAudio = isInternalAudioIncluded,
                         isBroadcast = 1,
-                        customDataPacket = (activity as DashBoardActivity).callerName
+                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
                         
                     ),
                     mediaProjection
@@ -577,7 +577,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                         sessionType = sessionType,
                         isAppAudio = false,
                         isBroadcast = 1,
-                        customDataPacket = (activity as DashBoardActivity).callerName
+                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
                     )
                 )
             }

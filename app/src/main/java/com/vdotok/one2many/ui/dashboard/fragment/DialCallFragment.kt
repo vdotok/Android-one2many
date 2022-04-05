@@ -313,6 +313,10 @@ class DialCallFragment : CallMangerListenerFragment() {
 //        closeFragmentWithMessage(reason)
     }
 
+    override fun onCallerAlreadyBusy() {
+        closeFragmentWithMessage("Target is busy!")
+    }
+
     override fun onParticipantLeftCall(refId: String?) {
 
     }
@@ -329,10 +333,6 @@ class DialCallFragment : CallMangerListenerFragment() {
        closeFragmentWithMessage("Call Missed!")
     }
 
-    override fun onInsufficientBalance() {
-        closeFragmentWithMessage("Insufficient Balance!")
-    }
-
     override fun onCallEnd() {
         activity?.runOnUiThread {
             try {
@@ -345,10 +345,6 @@ class DialCallFragment : CallMangerListenerFragment() {
 
     override fun onPublicURL(publicURL: String) {
        //// TODO("Not yet implemented")
-    }
-
-    override fun onCallerAlreadyBusy() {
-        closeFragmentWithMessage("Target is busy!")
     }
 
     override fun checkCallType() {
@@ -371,4 +367,8 @@ class DialCallFragment : CallMangerListenerFragment() {
             onCallEnd()
         }
     }
+    override fun onInsufficientBalance() {
+        closeFragmentWithMessage("Insufficient Balance!")
+    }
+
 }

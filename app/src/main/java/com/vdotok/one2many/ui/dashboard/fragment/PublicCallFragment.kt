@@ -59,8 +59,6 @@ class PublicCallFragment : CallMangerListenerFragment() {
     var multi :Boolean = false
     var rootEglBase: EglBase? = null
 
-
-
     private lateinit var callClient: CallClient
     private var groupModel : GroupModel? = null
     private lateinit var prefs: Prefs
@@ -149,7 +147,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
             Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         }
 
-        binding.tvCallType.setOnClickListener {
+        binding.copyURL.setOnClickListener {
             copyTextToClipboard()
         }
 
@@ -445,18 +443,6 @@ class PublicCallFragment : CallMangerListenerFragment() {
         } catch (e: Exception) {}
     }
 
-    override fun onInsufficientBalance() {
-        closeFragmentWithMessage("Insufficient Balance!")
-    }
-
-    private fun closeFragmentWithMessage(message: String?) {
-        activity?.runOnUiThread {
-            (activity as DashBoardActivity).callParams1 = null
-            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
-            onCallEnd()
-        }
-    }
-
     override fun onCallEnd() {
         try {
             listUser.clear()
@@ -466,7 +452,10 @@ class PublicCallFragment : CallMangerListenerFragment() {
     }
 
     override fun onPublicURL(publicURL: String) {
-         url = publicURL
+        activity?.runOnUiThread {
+            if (publicURL.isNotEmpty()) binding.copyURL.show()
+        }
+        url = publicURL
     }
 
     override fun checkCallType() {
@@ -585,7 +574,17 @@ class PublicCallFragment : CallMangerListenerFragment() {
         binding.root.showSnackBar(getString(R.string.copy_url_text))
     }
 
+    override fun onInsufficientBalance() {
+        closeFragmentWithMessage("Insufficient Balance!")
+    }
 
+    private fun closeFragmentWithMessage(message: String?) {
+        activity?.runOnUiThread {
+            (activity as DashBoardActivity).callParams1 = null
+            Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+            onCallEnd()
+        }
+    }
 
 
 }

@@ -82,6 +82,7 @@
             tools:text="copy url"
             android:textColor="@color/tile_green_dark"
             android:textSize="14sp"
+            android:visibility="gone"
             app:layout_constraintTop_toTopOf="@id/tvUserName"
             app:layout_constraintBottom_toBottomOf="@+id/tvUserName"
             app:layout_constraintEnd_toEndOf="parent"  />
@@ -212,6 +213,21 @@
             app:layout_constraintTop_toBottomOf="@id/ivSpeaker"
             app:layout_constraintStart_toStartOf="@id/tvTime"
             app:layout_constraintEnd_toEndOf="@id/tvTime" />
+
+        <ImageView
+            android:id="@+id/copyURL"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:elevation="10dp"
+            android:focusable="true"
+            android:padding="10dp"
+            android:layout_marginTop="10dp"
+            android:visibility="gone"
+            android:src="@drawable/ic_copy_url"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/ivCountUser" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>

@@ -406,11 +406,8 @@ class CallFragment : CallMangerListenerFragment() {
             isSpeakerOff -> binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_off)
             else -> binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
         }
-            if (callClient.isSpeakerEnabled()){
-                callClient.setSpeakerEnable(false)
-              }else{
-                callClient.setSpeakerEnable(true)
-               }
+
+        callClient.toggleSpeakerOnOff()
     }
 
     companion object {
@@ -441,7 +438,7 @@ class CallFragment : CallMangerListenerFragment() {
                     binding.remoteView.getPreview().setMirror(false)
                     binding.remoteView.postDelayed({
                             isSpeakerOff = false
-                            callClient.setSpeakerEnable(true)
+                            callClient.toggleSpeakerOnOff()
                         }, 1000)
                         binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
                 } catch (e: Exception) {
@@ -455,7 +452,7 @@ class CallFragment : CallMangerListenerFragment() {
                     binding.remoteView.getPreview().setMirror(false)
                     binding.remoteView.postDelayed({
                         isSpeakerOff = false
-                        callClient.setSpeakerEnable(true)
+                        callClient.toggleSpeakerOnOff()
                     }, 1000)
                     binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
                 } catch (e: Exception) {
@@ -470,7 +467,7 @@ class CallFragment : CallMangerListenerFragment() {
                     stream.addSink(binding.localView.setView())
                     binding.remoteView.postDelayed({
                         isSpeakerOff = false
-                        callClient.setSpeakerEnable(true)
+                        callClient.toggleSpeakerOnOff()
                     }, 1000)
                     binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
 
@@ -544,10 +541,6 @@ class CallFragment : CallMangerListenerFragment() {
             (this.activity as DashBoardActivity).sessionId = null
             Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         } catch (e: Exception) {}
-    }
-
-    override fun onInsufficientBalance() {
-        closeFragmentWithMessage("Insufficient Balance!")
     }
 
     override fun onCallEnd() {
@@ -677,6 +670,10 @@ class CallFragment : CallMangerListenerFragment() {
             .start()
     }
 
+    override fun onInsufficientBalance() {
+        closeFragmentWithMessage("Insufficient Balance!")
+    }
+
     private fun closeFragmentWithMessage(message: String?) {
         activity?.runOnUiThread {
             (activity as DashBoardActivity).callParams1 = null
@@ -684,6 +681,4 @@ class CallFragment : CallMangerListenerFragment() {
             onCallEnd()
         }
     }
-
-
 }

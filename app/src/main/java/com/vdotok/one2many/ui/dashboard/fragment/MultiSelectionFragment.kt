@@ -161,14 +161,15 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                     isGroupSession
                 )
             }
-            Handler(Looper.getMainLooper()).postDelayed({
-                activity?.supportFragmentManager?.let {
-                    CreateUrlLinkDialog2(callClient,url = true, this::navToPublicCall).show(
-                        it,
-                        CreateUrlLinkDialog.TAG
-                    )
-                }
-            },2000)
+//            Handler(Looper.getMainLooper()).postDelayed({
+//                activity?.supportFragmentManager?.let {
+//                    CreateUrlLinkDialog2(callClient,url = true, this::navToPublicCall).show(
+//                        it,
+//                        CreateUrlLinkDialog.TAG
+//                    )
+//                }
+//            },2000)
+            navToPublicCall()
 
             } else {
             (activity as DashBoardActivity).connectClient()
@@ -482,10 +483,11 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
         bundle.putBoolean("screenMic",screenSharingMic)
         bundle.putBoolean(PublicDialCallFragment.IS_VIDEO_CALL,isVideoCall)
         bundle.putBoolean("video",cameraCall)
+        bundle.putBoolean("isIncoming", false)
         bundle.putBoolean("internalAudio",isInternalAudioIncluded)
         bundle.putString("url",url)
         bundle.putBoolean("multi",multiSelect)
-        Navigation.findNavController(binding.root).navigate(R.id.action_open_dial_public_fragment,bundle)
+        Navigation.findNavController(binding.root).navigate(R.id.action_open_call_public_fragment,bundle)
     }
     var mService: ProjectionService? = null
     var mBound = false
@@ -554,7 +556,8 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                     mediaProjection
                 )
             }
-            activity?.supportFragmentManager?.let { CreateUrlLinkDialog(callClient,url = true,this::navToPublicCall).show(it, CreateUrlLinkDialog.TAG) }
+//            activity?.supportFragmentManager?.let { CreateUrlLinkDialog(callClient,url = true,this::navToPublicCall).show(it, CreateUrlLinkDialog.TAG) }
+            navToPublicCall()
         } else {
             (activity as DashBoardActivity).connectClient()
         }
@@ -581,7 +584,8 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                     )
                 )
             }
-            activity?.supportFragmentManager?.let { CreateUrlLinkDialog(callClient,url = true,this::navToPublicCall).show(it, CreateUrlLinkDialog.TAG) }
+//            activity?.supportFragmentManager?.let { CreateUrlLinkDialog(callClient,url = true,this::navToPublicCall).show(it, CreateUrlLinkDialog.TAG) }
+            navToPublicCall()
         } else {
             (activity as DashBoardActivity).connectClient()
         }

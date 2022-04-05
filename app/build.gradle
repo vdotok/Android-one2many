@@ -27,7 +27,6 @@ android {
         }
     }
     packagingOptions {
-        exclude 'VdoTokOne2Many-keystore'
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'

@@ -384,32 +384,31 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             callParams.customDataPacket = callerName.calleName
         }
         isCallInitiator = false
-        if (sessionId?.let { callClient.getActiveSessionClient(it) } != null || sessionId2?.let {
-                callClient.getActiveSessionClient(
-                    it
-                )
-            } != null) {
-            callClient.sessionBusy(callParams.refId, callParams.sessionUUID)
-        } else {
-            if (callParams1 == null) {
-                callParams1 = callParams.copy()
+            if (sessionId?.let { callClient.getActiveSessionClient(it) } != null || sessionId2?.let {
+                    callClient.getActiveSessionClient(
+                        it
+                    )
+                } != null) {
+                callClient.sessionBusy(callParams.refId, callParams.sessionUUID)
             } else {
-                callParams2 = callParams.copy()
-                isMulti = true
-                isMultiSession = true
-            }
-
-            if ((callParams1 != null && callParams2 != null) && isMultiSession) {
-                callParams1?.let {
-                    mListener?.onIncomingCall(it)
+                if (callParams1 == null) {
+                    callParams1 = callParams.copy()
+                } else {
+                    callParams2 = callParams.copy()
+                    isMulti = true
+                    isMultiSession = true
                 }
-            } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUUID.isEmpty()) {
-                callParams1?.let {
-                    mListener?.onIncomingCall(it)
+
+                if ((callParams1 != null && callParams2 != null) && isMultiSession) {
+                    callParams1?.let {
+                        mListener?.onIncomingCall(it)
+                    }
+                } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUUID.isEmpty()) {
+                    callParams1?.let {
+                        mListener?.onIncomingCall(it)
+                    }
                 }
             }
-        }
-
 
         Log.e(
             "incomingCall",
@@ -503,14 +502,14 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         isMulti = false
         localStreamVideo = null
         localStreamScreen = null
-//        localView?.let {
-//           // localView.clearImage()
-//            localView.release()
-//        }
-//        remoteView?.let {
-//          //  remoteView.clearImage()
-//            remoteView.release()
-//        }
+        localView?.let {
+           // localView.clearImage()
+            localView.release()
+        }
+        remoteView?.let {
+          //  remoteView.clearImage()
+            remoteView.release()
+        }
         val sessionList = ArrayList<String>().apply {
             callParams1?.sessionUUID?.let {
                 add(it)
@@ -674,11 +673,11 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             CallStatus.NO_ANSWER_FROM_TARGET -> {
                 mLiveDataLeftParticipant.postValue(callInfoResponse.callParams?.toRefIds?.get(0))
             }
-            CallStatus.INSUFFICIENT_BALANCE ->{
-                mListener?.onInsufficientBalance()
-            }
             CallStatus.TARGET_IS_BUSY -> {
                 mListener?.onCallerAlreadyBusy()
+            }
+            CallStatus.INSUFFICIENT_BALANCE ->{
+                mListener?.onInsufficientBalance()
             }
             else -> {
             }

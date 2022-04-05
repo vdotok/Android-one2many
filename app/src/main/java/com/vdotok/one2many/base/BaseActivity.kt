@@ -100,13 +100,10 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
     override fun onPublicURL(publicURL: String) {
     }
 
-
     override fun onSessionReady(mediaProjection: MediaProjection?) {
-
     }
 
     override fun participantCount(participantCount: Int, participantRefIdList: ArrayList<String>) {
-
     }
 
     override fun audioVideoState(state: SessionStateInfo) {

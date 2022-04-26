@@ -18,6 +18,7 @@ import com.vdotok.network.models.AllGroupsResponse
 import com.vdotok.network.models.DeleteGroupModel
 import com.vdotok.network.network.NetworkConnectivity
 import com.vdotok.network.models.GroupModel
+import com.vdotok.network.network.HttpResponseCodes
 import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.enums.*
 import com.vdotok.streaming.models.CallParams
@@ -29,7 +30,6 @@ import com.vdotok.one2many.dialogs.UpdateGroupNameDialog
 import com.vdotok.one2many.extensions.*
 import com.vdotok.one2many.fragments.CallMangerListenerFragment
 import com.vdotok.one2many.models.*
-import com.vdotok.one2many.network.HttpResponseCodes
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.service.ProjectionService
 import com.vdotok.one2many.ui.account.AccountsActivity

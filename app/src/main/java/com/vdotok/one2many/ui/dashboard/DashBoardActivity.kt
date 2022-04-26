@@ -483,10 +483,12 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         )
         callParams2 = callParams.copy()
 
-        val pair = callClient.startMultiSession(callParams, mediaProjection, isGroupSession)
+        callClient.startMultiSessionV2(callParams, mediaProjection, isGroupSession)
+    }
 
-        callParams1?.sessionUUID = pair?.first.toString()
-        callParams2?.sessionUUID = pair?.second.toString()
+    override fun multiSessionCreated(sessionIds: Pair<String, String>) {
+        callParams1?.sessionUUID = sessionIds.first
+        callParams2?.sessionUUID = sessionIds.second
     }
 
     fun dialOne2ManyVideoCall(callParams: CallParams) {
@@ -601,10 +603,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         runOnUiThread { mListener?.sessionStart(mediaProjection) }
     }
 
-    override fun participantCount(participantCount: Int, participantRefIdList: ArrayList<String>) {
-        mListener?.acceptedUser(participantCount)
-    }
-
     override fun registrationStatus(registerResponse: RegisterResponse) {
 
         when (registerResponse.registrationStatus) {
@@ -678,6 +676,10 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
             CallStatus.INSUFFICIENT_BALANCE ->{
                 mListener?.onInsufficientBalance()
+            }
+            CallStatus.NEW_PARTICIPANT_ARRIVED,
+            CallStatus.EXISTING_PARTICIPANTS->{
+                callInfoResponse.callParams?.participantCount?.let { mListener?.acceptedUser(it) }
             }
             else -> {
             }

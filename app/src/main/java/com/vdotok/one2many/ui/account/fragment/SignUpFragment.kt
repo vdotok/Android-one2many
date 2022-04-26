@@ -10,10 +10,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import com.vdotok.network.models.LoginResponse
+import com.vdotok.network.network.HttpResponseCodes
 import com.vdotok.one2many.R
 import com.vdotok.one2many.databinding.LayoutFragmentSignupBinding
 import com.vdotok.one2many.extensions.*
-import com.vdotok.one2many.network.HttpResponseCodes
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.account.viewmodel.AccountViewModel
 import com.vdotok.one2many.utils.*

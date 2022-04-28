@@ -19,28 +19,14 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    signingConfigs {
-        releaseConfig {
-            storeFile file("VdoTokOne2Many-keystore")
-            storePassword("vdotok_12m@demo")
-            keyAlias "vdotok_alias"
-            keyPassword "vdotok_12m@demo"
-        }
-    }
     buildTypes {
         debug {
             applicationIdSuffix '.debug'
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        release {
-            minifyEnabled false
-            signingConfig signingConfigs.releaseConfig
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
     }
     packagingOptions {
-        exclude 'VdoTokOne2Many-keystore'
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'

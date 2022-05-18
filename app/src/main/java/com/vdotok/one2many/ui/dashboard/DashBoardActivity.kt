@@ -504,14 +504,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         isMulti = false
         localStreamVideo = null
         localStreamScreen = null
-        localView?.let {
-           // localView.clearImage()
-            localView.release()
-        }
-        remoteView?.let {
-          //  remoteView.clearImage()
-            remoteView.release()
-        }
         val sessionList = ArrayList<String>().apply {
             callParams1?.sessionUUID?.let {
                 add(it)

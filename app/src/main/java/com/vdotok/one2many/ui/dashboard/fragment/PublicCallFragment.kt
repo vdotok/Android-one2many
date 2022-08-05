@@ -137,7 +137,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
             participantsCount = arguments?.getInt("participantCount")!!
             multi =  arguments?.getBoolean("multi")?: false
 
-
+        callClient.setSpeakerEnable(true)
         binding.tvcount.text = participantsCount.toString()
         displayUi(isVideoCall,isIncomingCall,screenSharingApp,screenSharingMic,cameraCall,count)
 
@@ -167,13 +167,13 @@ class PublicCallFragment : CallMangerListenerFragment() {
         }
 
         binding.ivSpeaker.setOnClickListener {
-            isSpeakerOff = isSpeakerOff.not()
-            if (isSpeakerOff) {
+            if (callClient.isSpeakerEnabled()) {
+                callClient.setSpeakerEnable(false)
                 binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_off)
             } else {
+                callClient.setSpeakerEnable(true)
                 binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
             }
-            callClient.toggleSpeakerOnOff()
         }
 
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(true // default to enabled
@@ -217,7 +217,6 @@ class PublicCallFragment : CallMangerListenerFragment() {
                 } else {
                     binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_icon)
                 }
-                callClient.toggleSpeakerOnOff()
             }
 
         }

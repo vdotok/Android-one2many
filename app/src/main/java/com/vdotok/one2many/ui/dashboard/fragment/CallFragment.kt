@@ -140,7 +140,7 @@ class CallFragment : CallMangerListenerFragment() {
             isIncomingCall = true
             participantsCount = arguments?.getInt("participant")!!
         }
-
+        callClient.setSpeakerEnable(true)
         binding.tvcount.text = participantsCount.toString()
         displayUi(isVideoCameraCall,isIncomingCall,screenSharingApp,screenSharingMic,cameraCall)
 
@@ -212,7 +212,6 @@ class CallFragment : CallMangerListenerFragment() {
                 } else {
                     binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_icon)
                 }
-                callClient.toggleSpeakerOnOff()
 
             }
 
@@ -401,13 +400,13 @@ class CallFragment : CallMangerListenerFragment() {
         binding.tvTime.text = getTimeFromSeconds(callDuration)
     }
     private fun speakerButtonAction() {
-        isSpeakerOff = isSpeakerOff.not()
-        when {
-            isSpeakerOff -> binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_off)
-            else -> binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
+        if (callClient.isSpeakerEnabled()) {
+            callClient.setSpeakerEnable(false)
+            binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_off)
+        } else {
+            callClient.setSpeakerEnable(true)
+            binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
         }
-
-        callClient.toggleSpeakerOnOff()
     }
 
     companion object {
@@ -450,10 +449,7 @@ class CallFragment : CallMangerListenerFragment() {
                 try {
                     stream.addSink(binding.remoteView.setView())
                     binding.remoteView.getPreview().setMirror(false)
-                    binding.remoteView.postDelayed({
-                        isSpeakerOff = false
-                        callClient.toggleSpeakerOnOff()
-                    }, 1000)
+                    callClient.setSpeakerEnable(true)
                     binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
                 } catch (e: Exception) {
                     Log.i("SocketLog", "onStreamAvailable: exception" + e.printStackTrace())
@@ -465,10 +461,7 @@ class CallFragment : CallMangerListenerFragment() {
                     binding.localView.getPreview().setMirror(false)
                     binding.localView.show()
                     stream.addSink(binding.localView.setView())
-                    binding.remoteView.postDelayed({
-                        isSpeakerOff = false
-                        callClient.toggleSpeakerOnOff()
-                    }, 1000)
+                    callClient.setSpeakerEnable(true)
                     binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
 
                     isinitializeFullScree = false

@@ -199,7 +199,6 @@ class CallFragment : CallMangerListenerFragment() {
             isVideoCameraCall = !isVideoCameraCall
         }
 
-
         binding.internalAudio.setOnClickListener {
             if (!isIncomingCall) {
                 isInternalAudioResume = !isInternalAudioResume

@@ -454,6 +454,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                                 toRefIds = refIdList,
                                 callType = CallType.ONE_TO_MANY,
                                 isAppAudio = isInternalAudioIncluded,
+                                mediaType = MediaType.VIDEO,
                                 customDataPacket = (activity as DashBoardActivity).callerName.toString()
                         ),
                         mediaProjection,

@@ -22,6 +22,7 @@ import com.vdotok.network.models.LoginResponse
 import com.google.gson.Gson
 import com.vdotok.network.models.CallerData
 import com.vdotok.one2many.R
+import com.vdotok.one2many.VdoTok
 import com.vdotok.one2many.base.BaseActivity
 import com.vdotok.one2many.databinding.ActivityDashBoardBinding
 import com.vdotok.one2many.interfaces.FragmentRefreshListener
@@ -32,10 +33,7 @@ import com.vdotok.one2many.utils.ViewUtils.setStatusBarGradient
 import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.commands.CallInfoResponse
 import com.vdotok.streaming.commands.RegisterResponse
-import com.vdotok.streaming.enums.CallStatus
-import com.vdotok.streaming.enums.EnumConnectionStatus
-import com.vdotok.streaming.enums.RegistrationStatus
-import com.vdotok.streaming.enums.SessionType
+import com.vdotok.streaming.enums.*
 import com.vdotok.streaming.interfaces.CallSDKListener
 import com.vdotok.streaming.models.*
 import com.vdotok.streaming.utils.checkInternetAvailable
@@ -403,9 +401,13 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                     callParams1?.let {
                         mListener?.onIncomingCall(it)
                     }
+                    (application as VdoTok).callParam1 = null
+                    (application as VdoTok).callParam2 = null
                 } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUUID.isEmpty()) {
                     callParams1?.let {
                         mListener?.onIncomingCall(it)
+                        (application as VdoTok).callParam1 = null
+                        (application as VdoTok).callParam2 = null
                     }
                 }
             }
@@ -458,10 +460,11 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         isCallInitiator = true
         isCallInitiator2 = true
         participantList = callParams.toRefIds
-
         sessionId = callClient.startSession(callParams, mediaProjection)
         callParams.sessionUUID = sessionId.toString()
         callParams1 = callParams
+        (application as VdoTok).callParam1 = callParams1
+        (application as VdoTok).callParam2 = null
 
     }
 
@@ -483,6 +486,13 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         )
         callParams2 = callParams.copy()
 
+        callParams1?.mediaType = MediaType.VIDEO
+        callParams2?.mediaType = MediaType.VIDEO
+        callParams1?.sessionType = SessionType.CALL
+        callParams2?.sessionType = SessionType.SCREEN
+        (application as VdoTok).callParam1 = callParams1
+        (application as VdoTok).callParam2 = callParams2
+
         callClient.startMultiSessionV2(callParams, mediaProjection, isGroupSession)
     }
 
@@ -492,10 +502,11 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     fun dialOne2ManyVideoCall(callParams: CallParams) {
-
         sessionId2 = callClient.dialOne2ManyCall(callParams)
         callParams.sessionUUID = sessionId2.toString()
         callParams2 = callParams
+        (application as VdoTok).callParam2 = callParams2
+        (application as VdoTok).callParam1  = null
     }
 
     fun endCall() {

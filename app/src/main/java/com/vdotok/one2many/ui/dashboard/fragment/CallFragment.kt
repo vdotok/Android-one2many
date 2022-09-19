@@ -22,6 +22,7 @@ import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.models.CallParams
 import com.vdotok.streaming.models.SessionStateInfo
 import com.vdotok.one2many.R
+import com.vdotok.one2many.VdoTok
 import com.vdotok.one2many.databinding.LayoutFragmentCallBinding
 import com.vdotok.one2many.extensions.hide
 import com.vdotok.one2many.extensions.show
@@ -188,10 +189,12 @@ class CallFragment : CallMangerListenerFragment() {
                 binding.remoteView.showHideAvatar(true)
                 binding.imgCamera.setImageResource(R.drawable.ic_video_off)
                 (activity as DashBoardActivity).pauseVideo(false)
+                (activity?.application as VdoTok).camView = false
             } else {
                 binding.remoteView.showHideAvatar(false)
                 (activity as DashBoardActivity).resumeVideo(false)
                 binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
+                (activity?.application as VdoTok).camView = true
             }
             isVideoCameraCall = !isVideoCameraCall
         }

@@ -24,16 +24,30 @@ class VdoTok : Application() {
     private lateinit var prefs : Prefs
     var callParam1: CallParams? = null
     var callParam2:CallParams? = null
+    var camView:Boolean = true
     private var lifecycleEventObserver = LifecycleEventObserver { _, event ->
        when (event) {
           Lifecycle.Event.ON_RESUME -> {
               if ((callParam1?.mediaType == MediaType.VIDEO && callParam1?.sessionType == SessionType.CALL) || (callParam2?.mediaType == MediaType.VIDEO && callParam2?.sessionType == SessionType.CALL)) {
-                  if (callParam1?.sessionType == SessionType.CALL){
-                      callClient.resumeVideo(prefs.loginInfo?.refId.toString(),callParam1?.sessionUUID.toString())
+                  if (camView) {
+                      if (callParam1?.sessionType == SessionType.CALL) {
+                          callClient.resumeVideo(
+                              prefs.loginInfo?.refId.toString(),
+                              callParam1?.sessionUUID.toString()
+                          )
+                      } else {
+                          callClient.resumeVideo(
+                              prefs.loginInfo?.refId.toString(),
+                              callParam2?.sessionUUID.toString()
+                          )
+                      }
                   }else{
-                      callClient.resumeVideo(prefs.loginInfo?.refId.toString(),callParam2?.sessionUUID.toString())
+                      if (callParam1?.sessionType == SessionType.CALL){
+                          callClient.pauseVideo(prefs.loginInfo?.refId.toString(),callParam1?.sessionUUID.toString())
+                      }else{
+                          callClient.pauseVideo(prefs.loginInfo?.refId.toString(),callParam2?.sessionUUID.toString())
+                      }
                   }
-
               }
           }
            Lifecycle.Event.ON_PAUSE -> {

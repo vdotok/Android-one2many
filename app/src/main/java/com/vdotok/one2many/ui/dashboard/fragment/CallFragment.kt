@@ -150,6 +150,7 @@ class CallFragment : CallMangerListenerFragment() {
             Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         }
 
+
         binding.imgMute.setOnClickListener {
             isMuted = !isMuted
             if (isMuted) {

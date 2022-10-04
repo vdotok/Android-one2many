@@ -180,9 +180,7 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
                     userModel?.let {
                         prefs.loginInfo = it
                     }
-                    if (registerResponse.reConnectStatus == 1) {
                         callClient.initiateReInviteProcess()
-                    }
                 }
 
             }

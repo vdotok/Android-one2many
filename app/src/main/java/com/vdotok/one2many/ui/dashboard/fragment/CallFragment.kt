@@ -18,6 +18,7 @@ import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
 import com.vdotok.network.models.GroupModel
 import com.vdotok.network.models.Participants
+import com.vdotok.one2many.CustomCallView
 import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.models.CallParams
 import com.vdotok.streaming.models.SessionStateInfo
@@ -83,14 +84,13 @@ class CallFragment : CallMangerListenerFragment() {
     private var yPoint = 0.0f
     var user : String? = null
     var isinitializeFullScree :Boolean = false
-    var isFullStreamingViewInitiator :Boolean = false
     var rootEglBase: EglBase? = null
     var participantsCount = 0
     var loop = 0
     var swap = false
 
-    private lateinit var screenRemoteViewReference: CallViewRenderer
-    private lateinit var videoRemoteViewReference: CallViewRenderer
+    private lateinit var screenRemoteViewReference: CustomCallView
+    private lateinit var videoRemoteViewReference:  CustomCallView
 
 
     private val listUser =  ArrayList<Participants>()
@@ -143,11 +143,13 @@ class CallFragment : CallMangerListenerFragment() {
         }
         callClient.setSpeakerEnable(true)
         binding.tvcount.text = participantsCount.toString()
-        displayUi(isVideoCameraCall,isIncomingCall,screenSharingApp,screenSharingMic,cameraCall)
+        displayUi(isIncomingCall,screenSharingApp,screenSharingMic,cameraCall)
 
         binding.imgCallOff.performSingleClick {
             stopTimer()
             (activity as DashBoardActivity).endCall()
+            binding.remoteView.release()
+            binding.localView.release()
             Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         }
 
@@ -295,7 +297,6 @@ class CallFragment : CallMangerListenerFragment() {
      * @param videoCall videoCall to check whether its an audio or video call
      * */
     private fun displayUi(
-        videoCall: Boolean,
         isIncomingCall: Boolean,
         screenSharingApp: Boolean,
         screenSharingMic: Boolean,
@@ -315,6 +316,7 @@ class CallFragment : CallMangerListenerFragment() {
                 binding.tvScreen.hide()
 
             } else {
+                binding.ivSpeaker.hide()
                 if (screenSharingApp && cameraCall) {
                     binding.tvCallType.text = getString(R.string.screen_video_calling)
                     binding.imgscreenn.show()
@@ -437,7 +439,6 @@ class CallFragment : CallMangerListenerFragment() {
                 try {
                     binding.localView.hide()
                     stream.addSink(binding.remoteView.setView())
-                    binding.remoteView.getPreview().setMirror(false)
                     binding.remoteView.postDelayed({
                             isSpeakerOff = false
                             callClient.toggleSpeakerOnOff()
@@ -451,7 +452,6 @@ class CallFragment : CallMangerListenerFragment() {
                 Log.e("remotestream","isMultiSession && isinitializeFullScree")
                 try {
                     stream.addSink(binding.remoteView.setView())
-                    binding.remoteView.getPreview().setMirror(false)
                     callClient.setSpeakerEnable(true)
                     binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
                 } catch (e: Exception) {
@@ -461,7 +461,6 @@ class CallFragment : CallMangerListenerFragment() {
             } else {
                 Log.e("remotestream","only else")
                 try {
-                    binding.localView.getPreview().setMirror(false)
                     binding.localView.show()
                     stream.addSink(binding.localView.setView())
                     callClient.setSpeakerEnable(true)
@@ -481,6 +480,14 @@ class CallFragment : CallMangerListenerFragment() {
 
     }
 
+    override fun onCreated(created: Boolean) {
+        super.onCreated(created)
+        activity?.runOnUiThread {
+            binding.sessionEnable = created
+        }
+    }
+
+
     override fun onRemoteStreamReceived(refId: String, sessionID: String) {
     }
 
@@ -493,7 +500,6 @@ class CallFragment : CallMangerListenerFragment() {
         val myRunnable = Runnable {
                 try {
                     binding.localView.hide()
-                    binding.remoteView.getPreview().setMirror(false)
                     stream.addSink(binding.remoteView.setView())
                 } catch (e: Exception) {
                     e.printStackTrace()
@@ -543,6 +549,8 @@ class CallFragment : CallMangerListenerFragment() {
         try {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
+            binding.remoteView.release()
+            binding.localView.release()
             Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         } catch (e: Exception) {}
     }

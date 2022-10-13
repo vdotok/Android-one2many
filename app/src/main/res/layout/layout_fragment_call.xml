@@ -7,6 +7,10 @@
         <variable
             name="username"
             type="androidx.databinding.ObservableField&lt;String&gt;" />
+
+        <variable
+            name="sessionEnable"
+            type="Boolean" />
     </data>
 
     <FrameLayout
@@ -43,7 +47,7 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
 
 
-        <com.vdotok.streaming.views.CallViewRenderer
+        <com.vdotok.one2many.CustomCallView
             android:id="@+id/remoteView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -53,7 +57,7 @@
             app:avatar="@drawable/ic_user_icon"
             />
 
-        <com.vdotok.streaming.views.CallViewRenderer
+        <com.vdotok.one2many.CustomCallView
             android:id="@+id/localView"
             android:layout_width="130dp"
             android:layout_height="170dp"
@@ -148,9 +152,11 @@
                 android:id="@+id/imgCallOff"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:clickable="@{sessionEnable? true : false, default = false}"
                 android:layout_gravity="center_vertical"
                 android:layout_marginEnd="10dp"
-                android:src="@drawable/ic_end_call" />
+                android:src="@{sessionEnable?@drawable/ic_end_call:@drawable/ic_end_call_disable,default =@drawable/ic_end_call_disable}" />
+
 
             <ImageView
                 android:id="@+id/imgMute"

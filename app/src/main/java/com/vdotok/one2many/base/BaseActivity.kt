@@ -199,8 +199,8 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
     }
 
     override fun onCameraStream(stream: VideoTrack) {
-        localStream = stream
-        mListener?.onCameraStreamReceived(stream)
+//        localStream = stream
+//        mListener?.onCameraStreamReceived(stream)
     }
 
     override fun onRemoteStream(refId: String, sessionID: String) {

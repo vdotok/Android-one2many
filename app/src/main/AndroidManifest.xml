@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.vdotok.one2many">
 
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -27,6 +29,9 @@
             android:exported="true"
             android:foregroundServiceType="mediaProjection"
             android:name="com.vdotok.one2many.service.ProjectionService" />
+
+        <service android:name=".service.OnClearFromRecentService" />
+
         <activity
             android:name="com.vdotok.one2many.ui.dashboard.DashBoardActivity"
             android:theme="@style/Theme.AccountScreen"

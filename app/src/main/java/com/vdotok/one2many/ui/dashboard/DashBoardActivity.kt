@@ -17,6 +17,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.MutableLiveData
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.snackbar.Snackbar
 import com.vdotok.network.models.LoginResponse
 import com.google.gson.Gson
@@ -50,12 +52,12 @@ import org.webrtc.VideoTrack
 class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     private lateinit var binding: ActivityDashBoardBinding
-
+    private lateinit var navController: NavController
     var localStreamScreen: VideoTrack? = null
     var localStreamVideo: VideoTrack? = null
+    var enableButton = false
     var sessionId: String? = null
     var sessionId2: String? = null
-    var sessionCount = 0
     var streamCount = 1
     lateinit var callClient: CallClient
     lateinit var prefs: Prefs
@@ -101,6 +103,9 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         addInternetConnectionObserver()
         askForPermissions()
         initCallObserver()
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.chat_nav_host_fragment) as NavHostFragment
+        navController = navHostFragment.navController
     }
 
 
@@ -133,6 +138,22 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 }
             }
         })
+    }
+
+    private val listener = NavController.OnDestinationChangedListener { controller, destination, arguments ->
+        when(destination.id) {
+            R.id.callPublicFragment -> {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    mListener?.onCreated(enableButton)
+                },2000)
+            }
+            R.id.voiceFragment -> {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    mListener?.onCreated(enableButton)
+                },2000)
+            }
+
+        }
     }
 
     private fun performSocketReconnection() {
@@ -422,13 +443,14 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         isResumeState = false
         callParams1 = null
         callParams2 = null
-        callClient.disConnectSocket()
+        navController.addOnDestinationChangedListener(listener)
         super.onDestroy()
     }
 
     override fun onResume() {
         isResumeState = true
         askForPermissions()
+        navController.addOnDestinationChangedListener(listener)
         super.onResume()
      }
 
@@ -436,6 +458,11 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         prefs.loginInfo?.let {
             callParams2?.let { it1 ->
                 callClient.acceptIncomingCall(it.refId.toString(), it1)
+            }
+            if (isMultiSession){
+                if (!callParams1?.sessionUUID.isNullOrEmpty() && !callParams2?.sessionUUID.isNullOrEmpty()){
+                   enableButton = true
+                   }
             }
             isMultiSession = false
         }
@@ -454,6 +481,13 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             callParams.sessionUUID = sessionId.toString()
         }
         callParams1 = callParams
+        if (!isMultiSession) {
+            if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()) {
+                enableButton = true
+            }
+        }else{
+            enableButton = false
+        }
     }
 
     fun dialOne2ManyCall(callParams: CallParams, mediaProjection: MediaProjection?) {
@@ -465,6 +499,9 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         callParams1 = callParams
         (application as VdoTok).callParam1 = callParams1
         (application as VdoTok).callParam2 = null
+        if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()){
+            enableButton = true
+        }
 
     }
 
@@ -492,13 +529,17 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         callParams2?.sessionType = SessionType.SCREEN
         (application as VdoTok).callParam1 = callParams1
         (application as VdoTok).callParam2 = callParams2
-
         callClient.startMultiSessionV2(callParams, mediaProjection, isGroupSession)
     }
 
     override fun multiSessionCreated(sessionIds: Pair<String, String>) {
-        callParams1?.sessionUUID = sessionIds.first
-        callParams2?.sessionUUID = sessionIds.second
+            callParams1?.sessionUUID = sessionIds.first
+            callParams2?.sessionUUID = sessionIds.second
+            (application as VdoTok).callParam2 = callParams2
+            (application as VdoTok).callParam1  = callParams1
+         if (!callParams1?.sessionUUID.isNullOrEmpty() && !callParams2?.sessionUUID.isNullOrEmpty()) {
+             enableButton = true
+         }
     }
 
     fun dialOne2ManyVideoCall(callParams: CallParams) {
@@ -507,26 +548,31 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         callParams2 = callParams
         (application as VdoTok).callParam2 = callParams2
         (application as VdoTok).callParam1  = null
+        if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()){
+            enableButton = true
+        }
     }
 
     fun endCall() {
-        turnSpeakerOff()
-        incomingName = null
-        isMulti = false
-        localStreamVideo = null
-        localStreamScreen = null
-        val sessionList = ArrayList<String>().apply {
-            callParams1?.sessionUUID?.let {
-                add(it)
+        runOnUiThread {
+            turnSpeakerOff()
+            incomingName = null
+            isMulti = false
+            localStreamVideo = null
+            localStreamScreen = null
+            val sessionList = ArrayList<String>().apply {
+                callParams1?.sessionUUID?.let {
+                    add(it)
+                }
+                callParams2?.sessionUUID?.let {
+                    add(it)
+                }
             }
-            callParams2?.sessionUUID?.let {
-                add(it)
-            }
+            callClient.endCallSession(sessionList)
+            sessionId = null
+            callParams1 = null
+            callParams2 = null
         }
-        callClient.endCallSession(sessionList)
-        sessionId = null
-        callParams1 = null
-        callParams2 = null
     }
 
     fun pauseVideo(isScreenShare: Boolean) {
@@ -602,6 +648,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         }
     }
 
+
     override fun onSessionReady(mediaProjection: MediaProjection?) {
         runOnUiThread { mListener?.sessionStart(mediaProjection) }
     }
@@ -657,8 +704,10 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             CallStatus.NO_SESSION_EXISTS -> {
                 turnSpeakerOff()
                 isMulti = false
+                enableButton = false
                 mLiveDataEndCall.postValue(true)
             }
+
             CallStatus.CALL_MISSED -> {
                 sessionId?.let {
                     if (callClient.getActiveSessionClient(it) == null)
@@ -719,7 +768,9 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     override fun onCameraStream(stream: VideoTrack) {
         localStreamVideo = stream
-        mListener?.onCameraStreamReceived(stream)
+        Handler(Looper.getMainLooper()).postDelayed({
+            mListener?.onCameraStreamReceived(stream)
+        },200)
     }
 
 

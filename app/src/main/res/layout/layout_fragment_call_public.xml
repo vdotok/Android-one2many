@@ -7,6 +7,10 @@
         <variable
             name="username"
             type="androidx.databinding.ObservableField&lt;String&gt;" />
+
+        <variable
+            name="sessionEnable"
+            type="Boolean" />
     </data>
 
     <FrameLayout
@@ -43,26 +47,16 @@
             app:layout_constraintBottom_toBottomOf="parent"/>
 
 
-        <com.vdotok.streaming.views.CallViewRenderer
+        <com.vdotok.one2many.CustomCallView
             android:id="@+id/remoteView"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:avatar="@drawable/ic_user_icon"
             />
-
-        <com.vdotok.streaming.views.CallViewRenderer
-            android:id="@+id/localView"
-            android:layout_width="130dp"
-            android:layout_height="170dp"
-            android:layout_gravity="center"
-            app:layout_constraintBottom_toTopOf="@+id/bottomBar"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:avatar="@drawable/ic_user_icon"
-            />
-
 
         <View
             android:layout_height="0dp"
@@ -148,9 +142,10 @@
                 android:id="@+id/imgCallOff"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
+                android:clickable="@{sessionEnable? true : false, default = false}"
                 android:layout_gravity="center_vertical"
                 android:layout_marginEnd="10dp"
-                android:src="@drawable/ic_end_call" />
+                android:src="@{sessionEnable?@drawable/ic_end_call:@drawable/ic_end_call_disable,default =@drawable/ic_end_call_disable}" />
 
             <ImageView
                 android:id="@+id/imgMute"
@@ -179,17 +174,6 @@
             app:layout_constraintStart_toStartOf="@id/tvTime"
             app:layout_constraintEnd_toEndOf="@id/tvTime" />
 
-        <ImageView
-            android:id="@+id/ivSpeaker"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginTop="10dp"
-            android:src="@drawable/ic_speaker_on"
-            app:layout_constraintTop_toBottomOf="@id/ivCamSwitch"
-            app:layout_constraintStart_toStartOf="@id/tvTime"
-            app:layout_constraintEnd_toEndOf="@id/tvTime" />
         <TextView
             android:id="@+id/tvcount"
             android:layout_width="0dp"
@@ -199,7 +183,7 @@
             tools:text="5"
             android:textColor="@color/tile_green_dark"
             android:textSize="14sp"
-            app:layout_constraintTop_toBottomOf="@+id/ivSpeaker"
+            app:layout_constraintTop_toBottomOf="@+id/ivCamSwitch"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <ImageView
@@ -210,7 +194,7 @@
             android:focusable="true"
             android:layout_marginTop="10dp"
             android:src="@drawable/ic_count_icon"
-            app:layout_constraintTop_toBottomOf="@id/ivSpeaker"
+            app:layout_constraintTop_toBottomOf="@+id/ivCamSwitch"
             app:layout_constraintStart_toStartOf="@id/tvTime"
             app:layout_constraintEnd_toEndOf="@id/tvTime" />
 

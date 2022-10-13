@@ -103,5 +103,14 @@ public class ProjectionService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopForeground(true);
+        stopSelf();
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        stopForeground(true);
+        stopSelf();
     }
 }

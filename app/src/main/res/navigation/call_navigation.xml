@@ -177,7 +177,7 @@
 
     <fragment
         android:id="@+id/callPublicFragment"
-        android:name="com.vdotok.one2many.feature.dashBoard.fragment.PublicCallFragment"
+        android:name="com.vdotok.one2many.ui.dashboard.fragment.PublicCallFragment"
         android:label="callPublicFragment"
         tools:layout="@layout/layout_fragment_call_public">
 

@@ -1,25 +1,20 @@
-package com.vdotok.one2many.feature.dashBoard.fragment
+package com.vdotok.one2many.ui.dashboard.fragment
 
-import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.media.projection.MediaProjection
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
-import androidx.core.view.isVisible
-import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
 import com.vdotok.network.models.GroupModel
 import com.vdotok.network.models.Participants
+import com.vdotok.one2many.CustomCallView
 import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.models.CallParams
 import com.vdotok.streaming.models.SessionStateInfo
@@ -32,12 +27,8 @@ import com.vdotok.one2many.extensions.showSnackBar
 import com.vdotok.one2many.fragments.CallMangerListenerFragment
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
-import com.vdotok.one2many.ui.dashboard.fragment.CallFragment
-import com.vdotok.one2many.ui.dashboard.fragment.DialCallFragment
-import com.vdotok.one2many.ui.dashboard.fragment.PublicDialCallFragment
 import com.vdotok.one2many.utils.TimeUtils.getTimeFromSeconds
 import com.vdotok.one2many.utils.performSingleClick
-import com.vdotok.streaming.views.CallViewRenderer
 import org.webrtc.EglBase
 import org.webrtc.VideoTrack
 import java.util.*
@@ -61,14 +52,10 @@ class PublicCallFragment : CallMangerListenerFragment() {
     var rootEglBase: EglBase? = null
 
     private lateinit var callClient: CallClient
-    private var groupModel : GroupModel? = null
     private lateinit var prefs: Prefs
 
-    private var userName : ObservableField<String> = ObservableField<String>()
-    private var groupList = ArrayList<GroupModel>()
     private var isInternalAudioResume = false
     private var isMuted = false
-    private var isSpeakerOff = true
     private var isaudioOff = true
     private var isVideoCall = true
     private var isVideoCall1 = true
@@ -80,13 +67,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
     private var screenWidth = 0
     private var screenHeight = 0
 
-    private var rightDX = 0
-    private var rightDY = 0
-
-    private var xPoint = 0.0f
-    private var yPoint = 0.0f
     var user : String? = null
-    var isFullStreamingView :Boolean = false
     var url : String? = null
 
     private val listUser =  ArrayList<Participants>()
@@ -94,8 +75,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
     var participantsCount = 0
     var loop = 0
 
-    private lateinit var screenRemoteViewReference: CallViewRenderer
-    private lateinit var videoRemoteViewReference: CallViewRenderer
+    private lateinit var videoRemoteViewReference: CustomCallView
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -115,9 +95,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
      * */
     private fun init() {
         prefs = Prefs(this.requireContext())
-        screenRemoteViewReference = binding.localView
         videoRemoteViewReference = binding.remoteView
-
 
         binding.tvCallType.text = getString(R.string.your_url)
 
@@ -125,8 +103,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
 
         CallClient.getInstance(activity as Context)?.let {
             callClient = it
-        }
-
+         }
             isIncomingCall = arguments?.get("isIncoming") as Boolean
             screenSharingApp = arguments?.getBoolean("screenApp")?: false
             screenSharingMic = arguments?.getBoolean("screenMic")?: false
@@ -140,11 +117,12 @@ class PublicCallFragment : CallMangerListenerFragment() {
 
         callClient.setSpeakerEnable(true)
         binding.tvcount.text = participantsCount.toString()
-        displayUi(isVideoCall,isIncomingCall,screenSharingApp,screenSharingMic,cameraCall,count)
+        displayUi(screenSharingApp,screenSharingMic,cameraCall)
 
         binding.imgCallOff.performSingleClick {
             stopTimer()
             (activity as DashBoardActivity).endCall()
+            binding.remoteView.release()
             Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         }
 
@@ -164,16 +142,6 @@ class PublicCallFragment : CallMangerListenerFragment() {
                     (activity as DashBoardActivity).muteUnMuteCall(true) }
                 cameraCall -> (activity as DashBoardActivity).muteUnMuteCall(false)
                 else -> (activity as DashBoardActivity).muteUnMuteCall(true)
-            }
-        }
-
-        binding.ivSpeaker.setOnClickListener {
-            if (callClient.isSpeakerEnabled()) {
-                callClient.setSpeakerEnable(false)
-                binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_off)
-            } else {
-                callClient.setSpeakerEnable(true)
-                binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
             }
         }
 
@@ -226,9 +194,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
 
         binding.imgscreenn.setOnClickListener {
             if (isVideoCall) {
-                if (screenSharingMic && cameraCall || screenSharingApp && cameraCall){
-                    binding.localView.showHideAvatar(true)
-                }else{
+               if (!cameraCall){
                     binding.remoteView.show()
                     binding.tvScreen.hide()
                     binding.remoteView.showHideAvatar(true)
@@ -236,9 +202,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
                 (activity as DashBoardActivity).pauseVideo(true)
                 binding.imgscreenn.setImageResource(R.drawable.ic_screensharing_off)
             } else {
-                if (screenSharingMic && cameraCall || screenSharingApp && cameraCall){
-                    binding.localView.showHideAvatar(false)
-                }else{
+                if (!cameraCall){
                     binding.tvScreen.show()
                     binding.remoteView.hide()
                     binding.remoteView.showHideAvatar(false)
@@ -249,31 +213,28 @@ class PublicCallFragment : CallMangerListenerFragment() {
             isVideoCall = !isVideoCall
         }
 
-        addTouchEventListener()
 
         screenWidth = context?.resources?.displayMetrics?.widthPixels!!
         screenHeight = context?.resources?.displayMetrics?.heightPixels!!
-
-        (activity as DashBoardActivity).localStreamVideo?.let { onCameraStreamReceived(it) }
 
         binding.root.setTag("1")
 
 
     }
-
-
+    override fun onCreated(created: Boolean) {
+        activity?.runOnUiThread {
+            binding.sessionEnable = created
+        }
+    }
 
     /**
      * Function to set ui related to audio and video
      * @param videoCall videoCall to check whether its an audio or video call
      * */
     private fun displayUi(
-        videoCall: Boolean,
-        isIncomingCall: Boolean,
         screenSharingApp: Boolean,
         screenSharingMic: Boolean,
-        cameraCall: Boolean,
-        count: Int?
+        cameraCall: Boolean
     ) {
         if (!isAdded) {
             return
@@ -284,7 +245,6 @@ class PublicCallFragment : CallMangerListenerFragment() {
             binding.imgCamera.show()
             binding.tvScreen.hide()
             binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
-            binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
             if (!isInternalAudioIncluded && screenSharingApp) {
                 binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_disable)
                 binding.internalAudio.isEnabled = false
@@ -298,7 +258,6 @@ class PublicCallFragment : CallMangerListenerFragment() {
             binding.tvScreen.hide()
             binding.ivCamSwitch.show()
             binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
-            binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
         } else if (screenSharingApp) {
             if (!isInternalAudioIncluded && screenSharingApp) {
                 binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_disable)
@@ -308,7 +267,6 @@ class PublicCallFragment : CallMangerListenerFragment() {
             binding.imgCamera.hide()
             binding.ivCamSwitch.hide()
             binding.imgMute.hide()
-            binding.localView.hide()
             binding.remoteView.hide()
         } else if (screenSharingMic) {
             if (!isInternalAudioIncluded && screenSharingMic) {
@@ -318,15 +276,12 @@ class PublicCallFragment : CallMangerListenerFragment() {
             binding.imgCamera.hide()
             binding.ivCamSwitch.hide()
             binding.internalAudio.hide()
-            binding.localView.hide()
             binding.remoteView.hide()
         } else if (cameraCall) {
             binding.internalAudio.hide()
             binding.imgscreenn.hide()
             binding.ivCamSwitch.show()
-            binding.localView.hide()
             binding.tvScreen.hide()
-            binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
             binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
         }
 
@@ -382,14 +337,14 @@ class PublicCallFragment : CallMangerListenerFragment() {
     override fun outGoingCall(toPeer: GroupModel) {
         activity?.let {
             it.runOnUiThread {
-                openCallFragment(toPeer, isVideoCall)
+                openCallFragment(toPeer)
             }
         }
 
     }
 
 
-    private fun openCallFragment(toPeer: GroupModel, videoCall: Boolean) {
+    private fun openCallFragment(toPeer: GroupModel) {
         val bundle = Bundle()
         bundle.putParcelable(GroupModel.TAG, toPeer)
         bundle.putBoolean(DialCallFragment.IS_VIDEO_CALL, true)
@@ -406,29 +361,11 @@ class PublicCallFragment : CallMangerListenerFragment() {
 
 
     override fun onCameraStreamReceived(stream: VideoTrack) {
-        val myRunnable = Runnable {
-            if (!isFullStreamingView) {
-                isFullStreamingView = true
-                try {
-                    binding.localView.hide()
-                    binding.remoteView.getPreview().setMirror(false)
-                    stream.addSink(binding.remoteView.setView())
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            } else {
-                try {
-                    binding.localView.getPreview().setMirror(false)
-                    binding.localView.show()
-                    stream.addSink(binding.localView.setView())
-                } catch (e: Exception) {
-                    e.printStackTrace()
-
-                }
-            }
-
+        try {
+            stream.addSink(binding.remoteView.setView())
+        } catch (e: Exception) {
+           Log.d("onCameraStreanError",e.message.toString())
         }
-        activity?.let { Handler(it.mainLooper) }?.post(myRunnable)
     }
 
     override fun onCameraAudioOff(
@@ -487,86 +424,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
         binding.tvcount.text = participantsCount.toString()
     }
 
-
-
     override fun onCallRejected(reason: String) {}
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun addTouchEventListener() {
-        Handler(Looper.getMainLooper()).postDelayed({
-            binding.localView.setOnTouchListener(View.OnTouchListener { view, event ->
-                when (event?.action) {
-                    MotionEvent.ACTION_DOWN -> {
-                        rightDX = (binding.localView.x - event.rawX).toInt()
-                        rightDY = (binding.localView.y - event.rawY).toInt()
-                    }
-                    MotionEvent.ACTION_MOVE -> {
-                        val displacementX = event.rawX + rightDX
-                        val displacementY = event.rawY + rightDY
-
-                        binding.localView.animate()
-                            .x(displacementX)
-                            .y(displacementY)
-                            .setDuration(0)
-                            .start()
-
-                        Handler(Looper.getMainLooper()).postDelayed({
-
-                            xPoint = view.x + view.width
-                            yPoint = view.y + view.height
-
-                            when {
-                                xPoint > screenWidth / 2 && yPoint < screenHeight / 2 -> {
-                                    //First Quadrant
-                                    animateView(
-                                        ((screenWidth - (view.width + CallFragment.THRESHOLD_VALUE))),
-                                        (screenHeight / 2 - (view.height + CallFragment.THRESHOLD_VALUE))
-                                    )
-                                }
-                                xPoint < screenWidth / 2 && yPoint < screenHeight / 2 -> {
-                                    //Second Quadrant
-                                    animateView(
-                                        CallFragment.THRESHOLD_VALUE,
-                                        (screenHeight / 2 - (view.height + CallFragment.THRESHOLD_VALUE))
-                                    )
-                                }
-                                xPoint < screenWidth / 2 && yPoint > screenHeight / 2 -> {
-                                    //Third Quadrant
-                                    animateView(
-                                        CallFragment.THRESHOLD_VALUE,
-                                        (screenHeight / 2 + view.height / 2).toFloat()
-                                    )
-                                }
-                                else -> {
-                                    //Fourth Quadrant
-                                    animateView(
-                                        ((screenWidth - (view.width + CallFragment.THRESHOLD_VALUE))),
-                                        (screenHeight / 2 + view.height / 2).toFloat()
-                                    )
-                                }
-                            }
-
-                        }, 100)
-
-                    }
-                    else -> { // Note the block
-                        return@OnTouchListener false
-                    }
-                }
-                true
-            })
-        }, 1500)
-    }
-
-    private fun animateView(xPoint: Float, yPoint: Float) {
-        binding.localView.animate()
-            .x(xPoint)
-            .y(yPoint)
-            .setDuration(200)
-            .start()
-    }
-
-
 
     private fun copyTextToClipboard() {
         val textToCopy = url

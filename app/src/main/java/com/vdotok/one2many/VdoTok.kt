@@ -20,7 +20,7 @@ import com.vdotok.streaming.views.CallViewRenderer
  */
 class VdoTok : Application() {
 
-    private lateinit var callClient: CallClient
+   lateinit var callClient: CallClient
     private lateinit var prefs : Prefs
     var callParam1: CallParams? = null
     var callParam2:CallParams? = null

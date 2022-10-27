@@ -431,7 +431,6 @@ class CallFragment : CallMangerListenerFragment() {
 
     override fun onRemoteStreamReceived(stream: VideoTrack, refId: String, sessionID: String, isCameraStream: Boolean) {
         activity?.runOnUiThread {
-
             if (!isinitializeFullScree) {
                 Log.e("remotestream","isinitializeFullScree")
                 isinitializeFullScree = true
@@ -439,21 +438,6 @@ class CallFragment : CallMangerListenerFragment() {
                 try {
                     binding.localView.hide()
                     stream.addSink(binding.remoteView.setView())
-                    binding.remoteView.postDelayed({
-                            isSpeakerOff = false
-                            callClient.toggleSpeakerOnOff()
-                        }, 1000)
-                        binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
-                } catch (e: Exception) {
-                    Log.i("SocketLog", "onStreamAvailable: exception" + e.printStackTrace())
-                }
-
-            } else if (!(activity as DashBoardActivity).isMulti && isinitializeFullScree) {
-                Log.e("remotestream","isMultiSession && isinitializeFullScree")
-                try {
-                    stream.addSink(binding.remoteView.setView())
-                    callClient.setSpeakerEnable(true)
-                    binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
                 } catch (e: Exception) {
                     Log.i("SocketLog", "onStreamAvailable: exception" + e.printStackTrace())
                 }
@@ -463,9 +447,6 @@ class CallFragment : CallMangerListenerFragment() {
                 try {
                     binding.localView.show()
                     stream.addSink(binding.localView.setView())
-                    callClient.setSpeakerEnable(true)
-                    binding.ivSpeaker.setImageResource(R.drawable.ic_speaker_on)
-
                     isinitializeFullScree = false
                 } catch (e: Exception) {
                     Log.i("SocketLog", "onStreamAvailable: exception" + e.printStackTrace())
@@ -511,27 +492,36 @@ class CallFragment : CallMangerListenerFragment() {
     override fun onCameraAudioOff(sessionStateInfo: SessionStateInfo, isMultySession: Boolean) {
         activity?.runOnUiThread {
             Log.d("sessionState",sessionStateInfo.toString())
-            if (isMultySession) {
-                if (sessionStateInfo.isScreenShare == true) {
-                        if (sessionStateInfo.videoState == 1) {
-                            screenRemoteViewReference.showHideAvatar(false)
-                        } else {
-                            screenRemoteViewReference.showHideAvatar(true)
-                        }
-                } else {
-                        if (sessionStateInfo.videoState == 1) {
-                            videoRemoteViewReference.showHideAvatar(false)
-                        } else {
-                            videoRemoteViewReference.showHideAvatar(true)
-                        }
+            if (sessionStateInfo.isScreenShare == true) {
+                when {
+                    sessionStateInfo.videoState == 1 -> {
+                        screenRemoteViewReference.showHideAvatar(false)
+                    }
+                    sessionStateInfo.videoState == 0 -> {
+                        screenRemoteViewReference.showHideAvatar(true)
+                    }
+                    sessionStateInfo.audioState == 1 -> {
+                        screenRemoteViewReference.showHideMuteIcon(false)
+                    }
+                    else -> {
+                        screenRemoteViewReference.showHideMuteIcon(true)
+                    }
                 }
-            }else{
-                    if (sessionStateInfo.videoState == 1) {
+            } else {
+                when {
+                    sessionStateInfo.videoState == 1 -> {
                         videoRemoteViewReference.showHideAvatar(false)
-                    } else {
+                    }
+                    sessionStateInfo.videoState == 0 -> {
                         videoRemoteViewReference.showHideAvatar(true)
                     }
-
+                    sessionStateInfo.audioState == 1 -> {
+                        screenRemoteViewReference.showHideMuteIcon(false)
+                    }
+                    else -> {
+                        screenRemoteViewReference.showHideMuteIcon(true)
+                    }
+                }
             }
         }
     }

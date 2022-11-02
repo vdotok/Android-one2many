@@ -806,6 +806,10 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     }
 
+    override fun sessionReconnecting(sessionID: String) {
+
+    }
+
     fun logout() {
         callClient.unRegister(
             ownRefId = prefs.loginInfo?.refId.toString()

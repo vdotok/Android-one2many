@@ -206,8 +206,6 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
     override fun onRemoteStream(refId: String, sessionID: String) {
     }
 
-    override fun memoryUsageDetails(memoryUsage: Long) {
-    }
 
     override fun sendCurrentDataUsage(sessionKey: String, usage: Usage) {
         prefs.loginInfo?.refId?.let { refId ->
@@ -235,6 +233,9 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
                 stats = sessionDataModel
             )
         }
+    }
+
+    override fun sessionReconnecting(sessionID: String) {
     }
 
     override fun sessionHold(sessionUUID: String) {

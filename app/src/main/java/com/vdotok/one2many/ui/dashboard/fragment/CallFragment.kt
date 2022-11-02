@@ -431,23 +431,20 @@ class CallFragment : CallMangerListenerFragment() {
 
     override fun onRemoteStreamReceived(stream: VideoTrack, refId: String, sessionID: String, isCameraStream: Boolean) {
         activity?.runOnUiThread {
-            if (!isinitializeFullScree) {
+            if ((activity as DashBoardActivity).callParams1?.sessionUUID == sessionID) {
                 Log.e("remotestream","isinitializeFullScree")
-                isinitializeFullScree = true
                 setUserNameUI(refId)
                 try {
-                    binding.localView.hide()
                     stream.addSink(binding.remoteView.setView())
                 } catch (e: Exception) {
                     Log.i("SocketLog", "onStreamAvailable: exception" + e.printStackTrace())
                 }
 
             } else {
+                binding.localView.show()
                 Log.e("remotestream","only else")
                 try {
-                    binding.localView.show()
                     stream.addSink(binding.localView.setView())
-                    isinitializeFullScree = false
                 } catch (e: Exception) {
                     Log.i("SocketLog", "onStreamAvailable: exception" + e.printStackTrace())
                 }

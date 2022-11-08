@@ -263,20 +263,22 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         if (callClient.isConnected() == true) {
 
             prefs.loginInfo?.let {
-                (activity as DashBoardActivity).dialOne2ManyCall(
-                    CallParams(
-                        refId = it.refId.toString(),
-                        toRefIds = refIdList,
-                        mcToken = it.mcToken.toString(),
-                        mediaType = MediaType.VIDEO,
-                        callType = CallType.ONE_TO_MANY,
-                        sessionType = SessionType.SCREEN,
-                        isAppAudio = isInternalAudioIncluded,
-                        isBroadcast = 0,
-                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
-                    ),
-                    mediaProjection
-                )
+                it.mcToken?.let { mcToken ->
+                    (activity as DashBoardActivity).dialOne2ManyCall(
+                        CallParams(
+                            refId = it.refId.toString(),
+                            toRefIds = refIdList,
+                            mcToken = mcToken,
+                            mediaType = MediaType.VIDEO,
+                            callType = CallType.ONE_TO_MANY,
+                            sessionType = SessionType.SCREEN,
+                            isAppAudio = isInternalAudioIncluded,
+                            isBroadcast = 0,
+                            customDataPacket = (activity as DashBoardActivity).callerName.toString()
+                        ),
+                        mediaProjection
+                    )
+                }
             }
             outGoingCall(groupModel!!)
         } else {

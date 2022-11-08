@@ -541,21 +541,23 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
         if (callClient.isConnected() == true) {
 
             prefs.loginInfo?.let {
-                (activity as DashBoardActivity).dialOne2ManyCall(
-                    CallParams(
-                        refId = it.refId.toString(),
-                        toRefIds = refIdList,
-                        mcToken = it.mcToken.toString(),
-                        mediaType = MediaType.VIDEO,
-                        callType = CallType.ONE_TO_MANY,
-                        sessionType = SessionType.SCREEN,
-                        isAppAudio = isInternalAudioIncluded,
-                        isBroadcast = 1,
-                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
-                        
-                    ),
-                    mediaProjection
-                )
+                it.mcToken?.let { mcToken ->
+                    (activity as DashBoardActivity).dialOne2ManyCall(
+                        CallParams(
+                            refId = it.refId.toString(),
+                            toRefIds = refIdList,
+                            mcToken = mcToken,
+                            mediaType = MediaType.VIDEO,
+                            callType = CallType.ONE_TO_MANY,
+                            sessionType = SessionType.SCREEN,
+                            isAppAudio = isInternalAudioIncluded,
+                            isBroadcast = 1,
+                            customDataPacket = (activity as DashBoardActivity).callerName.toString()
+
+                        ),
+                        mediaProjection
+                    )
+                }
             }
 //            activity?.supportFragmentManager?.let { CreateUrlLinkDialog(callClient,url = true,this::navToPublicCall).show(it, CreateUrlLinkDialog.TAG) }
             navToPublicCall()
@@ -571,19 +573,21 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
         if (callClient.isConnected() == true) {
 
             prefs.loginInfo?.let {
-                (activity as DashBoardActivity).dialOne2ManyVideoCall(
-                    CallParams(
-                        refId = it.refId!!,
-                        toRefIds = refIdList,
-                        mcToken = it.mcToken!!,
-                        mediaType = mediaType,
-                        callType = CallType.ONE_TO_MANY,
-                        sessionType = sessionType,
-                        isAppAudio = false,
-                        isBroadcast = 1,
-                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
+                it.mcToken?.let { mcToken ->
+                    (activity as DashBoardActivity).dialOne2ManyVideoCall(
+                        CallParams(
+                            refId = it.refId!!,
+                            toRefIds = refIdList,
+                            mcToken = mcToken,
+                            mediaType = mediaType,
+                            callType = CallType.ONE_TO_MANY,
+                            sessionType = sessionType,
+                            isAppAudio = false,
+                            isBroadcast = 1,
+                            customDataPacket = (activity as DashBoardActivity).callerName.toString()
+                        )
                     )
-                )
+                }
             }
 //            activity?.supportFragmentManager?.let { CreateUrlLinkDialog(callClient,url = true,this::navToPublicCall).show(it, CreateUrlLinkDialog.TAG) }
             navToPublicCall()

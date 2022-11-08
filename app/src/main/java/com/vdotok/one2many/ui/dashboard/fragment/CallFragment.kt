@@ -83,7 +83,6 @@ class CallFragment : CallMangerListenerFragment() {
     private var xPoint = 0.0f
     private var yPoint = 0.0f
     var user : String? = null
-    var isinitializeFullScree :Boolean = false
     var rootEglBase: EglBase? = null
     var participantsCount = 0
     var loop = 0

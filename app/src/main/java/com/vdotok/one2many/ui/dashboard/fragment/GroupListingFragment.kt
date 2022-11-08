@@ -504,21 +504,22 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         refIdList.remove(prefs.loginInfo?.refId)
 
         if (callClient.isConnected() == true) {
-
             prefs.loginInfo?.let {
-                (activity as DashBoardActivity).dialOne2ManyVideoCall(
-                    CallParams(
-                        refId = it.refId!!,
-                        toRefIds = refIdList,
-                        mcToken = it.mcToken!!,
-                        mediaType = mediaType,
-                        callType = CallType.ONE_TO_MANY,
-                        sessionType = sessionType,
-                        isAppAudio = false,
-                        isBroadcast = 0,
-                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
+                it.mcToken?.let {mcToken->
+                    (activity as DashBoardActivity).dialOne2ManyVideoCall(
+                        CallParams(
+                            refId = it.refId!!,
+                            toRefIds = refIdList,
+                            mcToken = mcToken,
+                            mediaType = mediaType,
+                            callType = CallType.ONE_TO_MANY,
+                            sessionType = sessionType,
+                            isAppAudio = false,
+                            isBroadcast = 0,
+                            customDataPacket = (activity as DashBoardActivity).callerName.toString()
+                        )
                     )
-                )
+                }
             }
             outGoingCall(groupModel)
         } else {

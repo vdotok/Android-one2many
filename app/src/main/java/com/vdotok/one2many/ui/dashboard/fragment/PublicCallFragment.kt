@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.media.projection.MediaProjection
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -49,6 +50,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
     var screenSharingMic :Boolean = false
     var cameraCall :Boolean = false
     var multi :Boolean = false
+    var isCamSwitch = false
     var rootEglBase: EglBase? = null
 
     private lateinit var callClient: CallClient
@@ -152,7 +154,16 @@ class PublicCallFragment : CallMangerListenerFragment() {
             this.viewLifecycleOwner,
             callback
         )
-        binding.ivCamSwitch.setOnClickListener { (activity as DashBoardActivity).switchCamera() }
+        binding.ivCamSwitch.setOnClickListener {
+            if (!isCamSwitch){
+                binding.remoteView.preview.setMirror(false)
+            }else{
+                binding.remoteView.preview.setMirror(true)
+            }
+            isCamSwitch = isCamSwitch.not()
+            (activity as DashBoardActivity).switchCamera()
+        }
+
 
         binding.imgCamera.setOnClickListener {
             if (isCallTypeAudio) {
@@ -361,12 +372,18 @@ class PublicCallFragment : CallMangerListenerFragment() {
 
 
     override fun onCameraStreamReceived(stream: VideoTrack) {
-        try {
-            stream.addSink(binding.remoteView.setView())
-        } catch (e: Exception) {
-           Log.d("onCameraStreanError",e.message.toString())
+        val myRunnable = Runnable {
+            try {
+                stream.addSink(binding.remoteView.setView())
+                binding.remoteView.preview.setMirror(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
         }
+        activity?.let { Handler(it.mainLooper) }?.post(myRunnable)
     }
+
 
     override fun onCameraAudioOff(
         sessionStateInfo: SessionStateInfo, isMultySession: Boolean

@@ -555,6 +555,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     fun endCall() {
         runOnUiThread {
+            turnMicState()
             turnSpeakerOff()
             incomingName = null
             isMulti = false
@@ -572,6 +573,14 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             sessionId = null
             callParams1 = null
             callParams2 = null
+        }
+    }
+
+    private fun turnMicState() {
+        if (!callClient.isAudioEnabled(callParams1?.sessionUUID.toString())){
+            callClient.muteUnMuteMic(callParams1?.refId.toString(),callParams1?.sessionUUID.toString())
+        }else if (!callClient.isAudioEnabled(callParams2?.sessionUUID.toString())){
+            callClient.muteUnMuteMic(callParams2?.refId.toString(),callParams2?.sessionUUID.toString())
         }
     }
 

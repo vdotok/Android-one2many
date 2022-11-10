@@ -33,6 +33,7 @@ import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.TimeUtils.getTimeFromSeconds
 import com.vdotok.one2many.utils.performSingleClick
+import com.vdotok.streaming.enums.SessionType
 import com.vdotok.streaming.views.CallViewRenderer
 import kotlinx.android.synthetic.main.layout_fragment_call.*
 import org.webrtc.EglBase
@@ -87,6 +88,7 @@ class CallFragment : CallMangerListenerFragment() {
     var participantsCount = 0
     var loop = 0
     var swap = false
+    var isCamSwitch = false
 
     private lateinit var screenRemoteViewReference: CustomCallView
     private lateinit var videoRemoteViewReference:  CustomCallView
@@ -110,8 +112,7 @@ class CallFragment : CallMangerListenerFragment() {
      * Function for setOnClickListeners and receiving data from outgoing and incoming call dial
      * */
     private fun init() {
-        prefs = Prefs(this.requireContext())
-
+       prefs = Prefs(this.requireContext())
        screenRemoteViewReference = binding.localView
        videoRemoteViewReference = binding.remoteView
 
@@ -182,6 +183,12 @@ class CallFragment : CallMangerListenerFragment() {
             callback
         )
         binding.ivCamSwitch.setOnClickListener {
+            if (!isCamSwitch){
+                binding.remoteView.preview.setMirror(false)
+            }else{
+                binding.remoteView.preview.setMirror(true)
+            }
+            isCamSwitch = isCamSwitch.not()
             (activity as DashBoardActivity).switchCamera()
         }
 
@@ -432,6 +439,11 @@ class CallFragment : CallMangerListenerFragment() {
         activity?.runOnUiThread {
             if ((activity as DashBoardActivity).callParams1?.sessionUUID == sessionID) {
                 Log.e("remotestream","isinitializeFullScree")
+                if ((activity as DashBoardActivity).callParams1?.sessionType == SessionType.SCREEN){
+                    binding.remoteView.preview.setMirror(false)
+                }else{
+                    binding.remoteView.preview.setMirror(true)
+                }
                 setUserNameUI(refId)
                 try {
                     stream.addSink(binding.remoteView.setView())
@@ -478,6 +490,7 @@ class CallFragment : CallMangerListenerFragment() {
                 try {
                     binding.localView.hide()
                     stream.addSink(binding.remoteView.setView())
+                    binding.remoteView.preview.setMirror(true)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -487,20 +500,37 @@ class CallFragment : CallMangerListenerFragment() {
     }
     override fun onCameraAudioOff(sessionStateInfo: SessionStateInfo, isMultySession: Boolean) {
         activity?.runOnUiThread {
-            Log.d("sessionState",sessionStateInfo.toString())
-            if (sessionStateInfo.isScreenShare == true) {
-                when {
-                    sessionStateInfo.videoState == 1 -> {
-                        screenRemoteViewReference.showHideAvatar(false)
+            Log.d("sessionState", sessionStateInfo.toString())
+            if (!(activity as DashBoardActivity).callParams1?.sessionUUID.isNullOrEmpty() && !(activity as DashBoardActivity).callParams2?.sessionUUID.isNullOrEmpty()) {
+                if (sessionStateInfo.isScreenShare == true) {
+                    when {
+                        sessionStateInfo.videoState == 1 -> {
+                            screenRemoteViewReference.showHideAvatar(false)
+                        }
+                        sessionStateInfo.videoState == 0 -> {
+                            screenRemoteViewReference.showHideAvatar(true)
+                        }
+                        sessionStateInfo.audioState == 1 -> {
+                            screenRemoteViewReference.showHideMuteIcon(false)
+                        }
+                        else -> {
+                            screenRemoteViewReference.showHideMuteIcon(true)
+                        }
                     }
-                    sessionStateInfo.videoState == 0 -> {
-                        screenRemoteViewReference.showHideAvatar(true)
-                    }
-                    sessionStateInfo.audioState == 1 -> {
-                        screenRemoteViewReference.showHideMuteIcon(false)
-                    }
-                    else -> {
-                        screenRemoteViewReference.showHideMuteIcon(true)
+                } else {
+                    when {
+                        sessionStateInfo.videoState == 1 -> {
+                            videoRemoteViewReference.showHideAvatar(false)
+                        }
+                        sessionStateInfo.videoState == 0 -> {
+                            videoRemoteViewReference.showHideAvatar(true)
+                        }
+                        sessionStateInfo.audioState == 1 -> {
+                            screenRemoteViewReference.showHideMuteIcon(false)
+                        }
+                        else -> {
+                            screenRemoteViewReference.showHideMuteIcon(true)
+                        }
                     }
                 }
             } else {

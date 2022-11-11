@@ -323,6 +323,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
         userName.set(prefs.loginInfo?.fullName)
 
         binding.tvLogout.setOnClickListener {
+            (activity as DashBoardActivity).logout()
             prefs.deleteKeyValuePair(ApplicationConstants.LOGIN_INFO)
             startActivity(AccountsActivity.createAccountsActivity(this.requireContext()))
         }

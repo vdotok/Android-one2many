@@ -673,9 +673,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                     userModel?.let {
                         prefs.loginInfo = it
                     }
-                    if (registerResponse.reConnectStatus == 1) {
-                        callClient.initiateReInviteProcess()
-                    }
+                 callClient.initiateReInviteProcess()
                 }
 
             }
@@ -820,6 +818,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     fun logout() {
+        callClient.disConnectSocket()
         callClient.unRegister(
             ownRefId = prefs.loginInfo?.refId.toString()
         )

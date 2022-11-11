@@ -439,11 +439,7 @@ class CallFragment : CallMangerListenerFragment() {
         activity?.runOnUiThread {
             if ((activity as DashBoardActivity).callParams1?.sessionUUID == sessionID) {
                 Log.e("remotestream","isinitializeFullScree")
-                if ((activity as DashBoardActivity).callParams1?.sessionType == SessionType.SCREEN){
-                    binding.remoteView.preview.setMirror(false)
-                }else{
-                    binding.remoteView.preview.setMirror(true)
-                }
+                binding.remoteView.preview.setMirror(false)
                 setUserNameUI(refId)
                 try {
                     stream.addSink(binding.remoteView.setView())

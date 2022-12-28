@@ -840,6 +840,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     fun logout() {
+        endCall()
         callClient.disConnectSocket()
         callClient.unRegister(
             ownRefId = prefs.loginInfo?.refId.toString()

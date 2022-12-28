@@ -589,10 +589,18 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     private fun turnMicState() {
-        if (!callClient.isAudioEnabled(callParams1?.sessionUUID.toString())){
-            callClient.muteUnMuteMic(callParams1?.refId.toString(),callParams1?.sessionUUID.toString())
-        }else if (!callClient.isAudioEnabled(callParams2?.sessionUUID.toString())){
-            callClient.muteUnMuteMic(callParams2?.refId.toString(),callParams2?.sessionUUID.toString())
+        if (callParams1?.isInitiator == true || callParams2?.isInitiator == true) {
+            if (!callClient.isAudioEnabled(callParams1?.sessionUUID.toString())) {
+                callClient.muteUnMuteMic(
+                    callParams1?.refId.toString(),
+                    callParams1?.sessionUUID.toString()
+                )
+            } else if (!callClient.isAudioEnabled(callParams2?.sessionUUID.toString())) {
+                callClient.muteUnMuteMic(
+                    callParams2?.refId.toString(),
+                    callParams2?.sessionUUID.toString()
+                )
+            }
         }
     }
 

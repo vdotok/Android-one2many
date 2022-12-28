@@ -28,6 +28,7 @@ interface FragmentRefreshListener {
     fun onConnectionSuccess() {}
     fun onConnectionFail() {}
     fun checkCallType()
+    fun navDialCall(){}
     fun onParticipantLeftCall(refId: String?)
     fun sessionStart(mediaProjection: MediaProjection?)
     fun acceptedUser(participantCount: Int)

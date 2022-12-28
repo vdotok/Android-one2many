@@ -10,6 +10,7 @@ import android.os.IBinder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.ObservableField
 import androidx.fragment.app.viewModels
@@ -237,7 +238,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
             || (screenSharingApp && isInternalAudioIncluded)){
                       startScreenCapture()
         } else {
-            dialOneToOneCall(mediaType = MediaType.VIDEO,sessionType = SessionType.CALL, groupModel)
+            dialOneToOneCall(mediaType = MediaType.VIDEO,sessionType = SessionType.CALL)
         }
 
     }
@@ -280,7 +281,6 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                     )
                 }
             }
-            outGoingCall(groupModel!!)
         } else {
             (activity as DashBoardActivity).connectClient()
         }
@@ -373,7 +373,18 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
             it.runOnUiThread {
                 openCallFragment(toPeer, isVideo)
             }
-        }    }
+        }
+    }
+
+    override fun navDialCall() {
+        groupModel?.let {
+            outGoingCall(it)
+        } ?: kotlin.run {
+            activity?.runOnUiThread {
+                Toast.makeText(activity, "Group Model is Empty!", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     /**
      * Function to pass data at outgoing side call
@@ -463,7 +474,6 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                         isGroupSession
                 )
             }
-            outGoingCall(groupModel!!)
         } else {
             (activity as DashBoardActivity).connectClient()
         }
@@ -500,9 +510,9 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
 
-    private fun dialOneToOneCall(mediaType: MediaType, sessionType: SessionType, groupModel: GroupModel) {
+    private fun dialOneToOneCall(mediaType: MediaType, sessionType: SessionType) {
 
-        val refIdList = groupModel.participants.map { it.refID } as ArrayList<String>
+        val refIdList = groupModel?.participants?.map { it.refID } as ArrayList<String>
         refIdList.remove(prefs.loginInfo?.refId)
 
         if (callClient.isConnected() == true) {
@@ -523,7 +533,6 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                     )
                 }
             }
-            outGoingCall(groupModel)
         } else {
             (activity as DashBoardActivity).connectClient()
         }

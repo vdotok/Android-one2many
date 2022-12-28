@@ -122,22 +122,24 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     fun addInternetConnectionObserver() {
         mLiveDataNetwork = NetworkStatusLiveData(this.application)
 
-        mLiveDataNetwork.observe(this, { isInternetConnected ->
+        mLiveDataNetwork.observe(this) { isInternetConnected ->
             when {
                 isInternetConnected == true && isInternetConnectionRestored && !isResumeState -> {
                     Log.e("Internet", "internet connection restored!")
+                    mListener?.onConnectionSuccess()
                     performSocketReconnection()
                 }
                 isInternetConnected == false -> {
                     isInternetConnectionRestored = true
                     reConnectStatus = true
                     isResumeState = false
+                    mListener?.onConnectionFail()
                     Log.e("Internet", "internet connection lost!")
                 }
                 else -> {
                 }
             }
-        })
+        }
     }
 
     private val listener = NavController.OnDestinationChangedListener { controller, destination, arguments ->
@@ -145,6 +147,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             R.id.callPublicFragment -> {
                 Handler(Looper.getMainLooper()).postDelayed({
                     mListener?.onCreated(enableButton)
+                    localStreamVideo?.let { mListener?.onCameraStreamReceived(it) }
                 },2000)
             }
             R.id.voiceFragment -> {
@@ -364,6 +367,12 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                     Toast.makeText(this, "Connection Error!", Toast.LENGTH_SHORT).show()
                 }
             }
+            EnumConnectionStatus.CLOSED -> {
+                mListener?.onConnectionFail()
+                runOnUiThread {
+                    Toast.makeText(this, "Closed !", Toast.LENGTH_SHORT).show()
+                }
+            }
             EnumConnectionStatus.SOCKET_PING -> {
 
                 handler?.removeCallbacks(runnableConnectClient)
@@ -499,6 +508,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         callParams1 = callParams
         (application as VdoTok).callParam1 = callParams1
         (application as VdoTok).callParam2 = null
+         mListener?.navDialCall()
         if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()){
             enableButton = true
         }
@@ -537,6 +547,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             callParams2?.sessionUUID = sessionIds.second
             (application as VdoTok).callParam2 = callParams2
             (application as VdoTok).callParam1  = callParams1
+            mListener?.navDialCall()
          if (!callParams1?.sessionUUID.isNullOrEmpty() && !callParams2?.sessionUUID.isNullOrEmpty()) {
              enableButton = true
          }
@@ -548,6 +559,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         callParams2 = callParams
         (application as VdoTok).callParam2 = callParams2
         (application as VdoTok).callParam1  = null
+        mListener?.navDialCall()
         if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()){
             enableButton = true
         }
@@ -706,11 +718,13 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
                 }
             }
+            CallStatus.CALL_REJECTED,
             CallStatus.SERVICE_SUSPENDED,
             CallStatus.OUTGOING_CALL_ENDED,
             CallStatus.NO_SESSION_EXISTS -> {
                 turnSpeakerOff()
                 isMulti = false
+                isMultiSession = false
                 enableButton = false
                 mLiveDataEndCall.postValue(true)
             }

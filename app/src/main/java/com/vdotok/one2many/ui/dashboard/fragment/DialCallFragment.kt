@@ -208,23 +208,47 @@ class DialCallFragment : CallMangerListenerFragment() {
     }
 
     fun rejectCall() {
-        timerFro30sec?.cancel()
-        (activity as DashBoardActivity).mLiveDataEndCall.postValue(true)
-        if (isIncomingCall) {
-            prefs.loginInfo?.let {
-                acceptCallModel?.let { it1 -> callClient.rejectIncomingCall(
-                    it.refId!!,
-                    it1.sessionUUID
-                )
+            timerFro30sec?.cancel()
+            if (isIncomingCall) {
+                prefs.loginInfo?.let {
+                    if ((activity as DashBoardActivity).callParams1 != null && (activity as DashBoardActivity).callParams2 != null) {
+                        (activity as DashBoardActivity).callParams1?.let { it1 ->
+                            callClient.rejectIncomingCall(
+                                it.refId!!,
+                                it1.sessionUUID
+                            )
+                        }
+                        (activity as DashBoardActivity).callParams2?.let { it1 ->
+                            callClient.rejectIncomingCall(
+                                it.refId!!,
+                                it1.sessionUUID
+                            )
+
+                        }
+                    } else if ((activity as DashBoardActivity).callParams1 != null) {
+                        (activity as DashBoardActivity).callParams1?.let { it1 ->
+                            callClient.rejectIncomingCall(
+                                it.refId!!,
+                                it1.sessionUUID
+                            )
+
+                        }
+                    } else {
+                        (activity as com.vdotok.one2many.ui.dashboard.DashBoardActivity).callParams2?.let { it1 ->
+                            callClient.rejectIncomingCall(
+                                it.refId!!,
+                                it1.sessionUUID
+                            )
+
+                        }
+
+                    }
                 }
+            } else {
+                (activity as DashBoardActivity).endCall()
             }
-        } else {
-            (activity as DashBoardActivity).endCall()
+            (activity as DashBoardActivity).mLiveDataEndCall.postValue(true)
         }
-        try {
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_selection_fragment)
-        } catch (e: Exception) {}
-    }
     /**
      * Function to be call when incoming dial call is accepted
      * */
@@ -336,6 +360,7 @@ class DialCallFragment : CallMangerListenerFragment() {
     override fun onCallEnd() {
         activity?.runOnUiThread {
             try {
+                (activity as DashBoardActivity).isMultiSession = false
                 Navigation.findNavController(binding.root).navigate(R.id.action_open_selection_fragment)
             } catch (e: Exception) {
                 e.printStackTrace()

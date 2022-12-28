@@ -162,15 +162,6 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                     isGroupSession
                 )
             }
-//            Handler(Looper.getMainLooper()).postDelayed({
-//                activity?.supportFragmentManager?.let {
-//                    CreateUrlLinkDialog2(callClient,url = true, this::navToPublicCall).show(
-//                        it,
-//                        CreateUrlLinkDialog.TAG
-//                    )
-//                }
-//            },2000)
-            navToPublicCall()
 
             } else {
             (activity as DashBoardActivity).connectClient()
@@ -186,6 +177,10 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
             true,
             url
         )
+    }
+
+    override fun navDialCall() {
+        navToPublicCall()
     }
 
     override fun onResume() {
@@ -219,6 +214,10 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
         binding.screenSharingMic = false
         binding.cameraCall = false
         binding.optionSelected = false
+
+        screenSharingApp = false
+        screenSharingMic = false
+        cameraCall = false
 
         binding.radioGroup.setOnCheckedChangeListener { radioGroup, i ->
             when(i){
@@ -480,16 +479,19 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
         isVideoCall: Boolean,
         url: String?
     ) {
-        val bundle = Bundle()
-        bundle.putBoolean("screenApp",screenSharingApp)
-        bundle.putBoolean("screenMic",screenSharingMic)
-        bundle.putBoolean(PublicDialCallFragment.IS_VIDEO_CALL,isVideoCall)
-        bundle.putBoolean("video",cameraCall)
-        bundle.putBoolean("isIncoming", false)
-        bundle.putBoolean("internalAudio",isInternalAudioIncluded)
-        bundle.putString("url",url)
-        bundle.putBoolean("multi",multiSelect)
-        Navigation.findNavController(binding.root).navigate(R.id.action_open_call_public_fragment,bundle)
+        activity?.runOnUiThread {
+            val bundle = Bundle()
+            bundle.putBoolean("screenApp", screenSharingApp)
+            bundle.putBoolean("screenMic", screenSharingMic)
+            bundle.putBoolean(PublicDialCallFragment.IS_VIDEO_CALL, isVideoCall)
+            bundle.putBoolean("video", cameraCall)
+            bundle.putBoolean("isIncoming", false)
+            bundle.putBoolean("internalAudio", isInternalAudioIncluded)
+            bundle.putString("url", url)
+            bundle.putBoolean("multi", multiSelect)
+            Navigation.findNavController(binding.root)
+                .navigate(R.id.action_open_call_public_fragment, bundle)
+        }
     }
     var mService: ProjectionService? = null
     var mBound = false
@@ -560,8 +562,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                     )
                 }
             }
-//            activity?.supportFragmentManager?.let { CreateUrlLinkDialog(callClient,url = true,this::navToPublicCall).show(it, CreateUrlLinkDialog.TAG) }
-            navToPublicCall()
+
         } else {
             (activity as DashBoardActivity).connectClient()
         }
@@ -590,8 +591,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
                     )
                 }
             }
-//            activity?.supportFragmentManager?.let { CreateUrlLinkDialog(callClient,url = true,this::navToPublicCall).show(it, CreateUrlLinkDialog.TAG) }
-            navToPublicCall()
+
         } else {
             (activity as DashBoardActivity).connectClient()
         }

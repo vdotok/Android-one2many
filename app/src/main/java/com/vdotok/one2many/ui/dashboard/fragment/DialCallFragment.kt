@@ -13,12 +13,6 @@ import android.widget.Toast
 import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
 import com.vdotok.network.models.GroupModel
-import com.vdotok.streaming.CallClient
-import com.vdotok.streaming.enums.CallType
-import com.vdotok.streaming.enums.MediaType
-import com.vdotok.streaming.enums.SessionType
-import com.vdotok.streaming.models.CallParams
-import com.vdotok.streaming.models.SessionStateInfo
 import com.vdotok.one2many.R
 import com.vdotok.one2many.databinding.FragmentDialCallBinding
 import com.vdotok.one2many.extensions.hide
@@ -29,6 +23,11 @@ import com.vdotok.one2many.models.AcceptCallModel
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.performSingleClick
+import com.vdotok.streaming.CallClient
+import com.vdotok.streaming.enums.MediaType
+import com.vdotok.streaming.enums.SessionType
+import com.vdotok.streaming.models.CallParams
+import com.vdotok.streaming.models.SessionStateInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -44,21 +43,21 @@ import org.webrtc.VideoTrack
 class DialCallFragment : CallMangerListenerFragment() {
     private var isIncomingCall: Boolean = false
     private lateinit var binding: FragmentDialCallBinding
-    var groupModel : GroupModel? = null
-    var username : String? = null
+    var groupModel: GroupModel? = null
+    var username: String? = null
 
-    var acceptCallModel : CallParams? = null
+    var acceptCallModel: CallParams? = null
     private var groupList = ArrayList<GroupModel>()
     var isVideoCall: Boolean = false
     private var isInternalAudioIncluded = false
-    var screenSharingApp :Boolean = false
-    var screenSharingMic :Boolean = false
-    var cameraCall :Boolean = false
+    var screenSharingApp: Boolean = false
+    var screenSharingMic: Boolean = false
+    var cameraCall: Boolean = false
 
-    var userName : ObservableField<String> = ObservableField<String>()
-    var incomingCallTitle : ObservableField<String> = ObservableField<String>()
-    var player: MediaPlayer?= null
-    private var timerFro30sec: Deferred<Unit> ?= null
+    var userName: ObservableField<String> = ObservableField<String>()
+    var incomingCallTitle: ObservableField<String> = ObservableField<String>()
+    var player: MediaPlayer? = null
+    private var timerFro30sec: Deferred<Unit>? = null
     private var refList = ArrayList<String>()
 
     private lateinit var callClient: CallClient
@@ -103,6 +102,7 @@ class DialCallFragment : CallMangerListenerFragment() {
     }
 
     var test = 0
+
     /**
      * Function to link binding data
      * */
@@ -120,17 +120,19 @@ class DialCallFragment : CallMangerListenerFragment() {
             isVideoCall = arguments?.getBoolean(IS_VIDEO_CALL) ?: false
             groupModel = it as GroupModel?
             isIncomingCall = arguments?.get("isIncoming") as Boolean
-            screenSharingApp = arguments?.getBoolean("screenApp")?: false
-            screenSharingMic = arguments?.getBoolean("screenMic")?: false
-            cameraCall = arguments?.getBoolean("video")?: false
-            isInternalAudioIncluded = arguments?.getBoolean("internalAudio")?: false
-        } ?: kotlin.run{
-            groupList = arguments?.getParcelableArrayList<GroupModel>("grouplist") as ArrayList<GroupModel>
+            screenSharingApp = arguments?.getBoolean("screenApp") ?: false
+            screenSharingMic = arguments?.getBoolean("screenMic") ?: false
+            cameraCall = arguments?.getBoolean("video") ?: false
+            isInternalAudioIncluded = arguments?.getBoolean("internalAudio") ?: false
+        } ?: kotlin.run {
+            groupList =
+                arguments?.getParcelableArrayList<GroupModel>("grouplist") as ArrayList<GroupModel>
             username = arguments?.get("userName") as String?
             acceptCallModel = arguments?.get(AcceptCallModel.TAG) as CallParams?
-            isIncomingCall =  arguments?.get("isIncoming") as Boolean
+            isIncomingCall = arguments?.get("isIncoming") as Boolean
         }
     }
+
     /**
      * Function to set data when outgoing call dial is implemented and setonClickListener
      * */
@@ -158,8 +160,8 @@ class DialCallFragment : CallMangerListenerFragment() {
      * */
     private fun getUsername() {
         groupModel.let { it ->
-            if(groupModel?.autoCreated == 1){
-                it?.participants?.forEach { name->
+            if (groupModel?.autoCreated == 1) {
+                it?.participants?.forEach { name ->
                     if (name.fullname?.equals(prefs.loginInfo?.fullName) == false) {
                         userName.set(name.fullname)
 
@@ -184,13 +186,13 @@ class DialCallFragment : CallMangerListenerFragment() {
 
         player = MediaPlayer.create(this.requireContext(), Settings.System.DEFAULT_RINGTONE_URI)
         player?.start()
-        if (username.isNullOrEmpty()){
+        if (username.isNullOrEmpty()) {
             userName.set("User")
-        }else{
-        userName.set(username)
+        } else {
+            userName.set(username)
         }
         when (acceptCallModel?.sessionType) {
-           SessionType.SCREEN -> {
+            SessionType.SCREEN -> {
                 incomingCallTitle.set(getString(R.string.incoming_call))
             }
             else -> {
@@ -199,7 +201,7 @@ class DialCallFragment : CallMangerListenerFragment() {
         }
 
         binding.imgCallAccept.performSingleClick {
-           acceptIncomingCall()
+            acceptIncomingCall()
         }
 
         binding.imgCallReject.performSingleClick {
@@ -207,48 +209,49 @@ class DialCallFragment : CallMangerListenerFragment() {
         }
     }
 
-    fun rejectCall() {
-            timerFro30sec?.cancel()
-            if (isIncomingCall) {
-                prefs.loginInfo?.let {
-                    if ((activity as DashBoardActivity).callParams1 != null && (activity as DashBoardActivity).callParams2 != null) {
-                        (activity as DashBoardActivity).callParams1?.let { it1 ->
-                            callClient.rejectIncomingCall(
-                                it.refId!!,
-                                it1.sessionUUID
-                            )
-                        }
-                        (activity as DashBoardActivity).callParams2?.let { it1 ->
-                            callClient.rejectIncomingCall(
-                                it.refId!!,
-                                it1.sessionUUID
-                            )
-
-                        }
-                    } else if ((activity as DashBoardActivity).callParams1 != null) {
-                        (activity as DashBoardActivity).callParams1?.let { it1 ->
-                            callClient.rejectIncomingCall(
-                                it.refId!!,
-                                it1.sessionUUID
-                            )
-
-                        }
-                    } else {
-                        (activity as com.vdotok.one2many.ui.dashboard.DashBoardActivity).callParams2?.let { it1 ->
-                            callClient.rejectIncomingCall(
-                                it.refId!!,
-                                it1.sessionUUID
-                            )
-
-                        }
+    private fun rejectCall() {
+        timerFro30sec?.cancel()
+        if (isIncomingCall) {
+            prefs.loginInfo?.let {
+                if ((activity as DashBoardActivity).callParams1 != null && (activity as DashBoardActivity).callParams2 != null) {
+                    (activity as DashBoardActivity).callParams1?.let { it1 ->
+                        callClient.rejectIncomingCall(
+                            it.refId!!,
+                            it1.sessionUUID
+                        )
+                    }
+                    (activity as DashBoardActivity).callParams2?.let { it1 ->
+                        callClient.rejectIncomingCall(
+                            it.refId!!,
+                            it1.sessionUUID
+                        )
 
                     }
+                } else if ((activity as DashBoardActivity).callParams1 != null) {
+                    (activity as DashBoardActivity).callParams1?.let { it1 ->
+                        callClient.rejectIncomingCall(
+                            it.refId!!,
+                            it1.sessionUUID
+                        )
+
+                    }
+                } else {
+                    (activity as com.vdotok.one2many.ui.dashboard.DashBoardActivity).callParams2?.let { it1 ->
+                        callClient.rejectIncomingCall(
+                            it.refId!!,
+                            it1.sessionUUID
+                        )
+
+                    }
+
                 }
-            } else {
-                (activity as DashBoardActivity).endCall()
             }
-            (activity as DashBoardActivity).mLiveDataEndCall.postValue(true)
+        } else {
+            (activity as DashBoardActivity).endCall()
         }
+        (activity as DashBoardActivity).mLiveDataEndCall.postValue(true)
+    }
+
     /**
      * Function to be call when incoming dial call is accepted
      * */
@@ -272,6 +275,7 @@ class DialCallFragment : CallMangerListenerFragment() {
 
     override fun onDestroy() {
         timerFro30sec?.cancel()
+        (activity as DashBoardActivity).dialCallOpen = false
         super.onDestroy()
         player?.stop()
     }
@@ -285,7 +289,7 @@ class DialCallFragment : CallMangerListenerFragment() {
         bundle.putString("userName", userName.get())
         bundle.putBoolean(IS_VIDEO_CALL, acceptCallModel?.mediaType == MediaType.VIDEO)
         bundle.putParcelable(AcceptCallModel.TAG, acceptCallModel)
-        bundle.putInt("participant",participantsCount)
+        bundle.putInt("participant", participantsCount)
         Navigation.findNavController(binding.root).navigate(R.id.action_open_call_fragment, bundle)
     }
 
@@ -293,13 +297,13 @@ class DialCallFragment : CallMangerListenerFragment() {
         const val IS_VIDEO_CALL = "IS_VIDEO_CALL"
 
         const val TAG = "DialCallFragment"
+
         @JvmStatic
         fun newInstance() = DialCallFragment()
 
     }
 
     override fun onIncomingCall(model: CallParams) {}
-
 
 
     override fun onStartCalling() {
@@ -309,11 +313,11 @@ class DialCallFragment : CallMangerListenerFragment() {
                 bundle.putParcelable(GroupModel.TAG, groupModel)
                 bundle.putBoolean(IS_VIDEO_CALL, isVideoCall)
                 bundle.putBoolean("isIncoming", false)
-                bundle.putBoolean("screenApp",screenSharingApp)
-                bundle.putBoolean("screenMic",screenSharingMic)
-                bundle.putBoolean("video",cameraCall)
-                bundle.putInt("participantsCount",participantsCount)
-                bundle.putBoolean("internalAudio",isInternalAudioIncluded)
+                bundle.putBoolean("screenApp", screenSharingApp)
+                bundle.putBoolean("screenMic", screenSharingMic)
+                bundle.putBoolean("video", cameraCall)
+                bundle.putInt("participantsCount", participantsCount)
+                bundle.putBoolean("internalAudio", isInternalAudioIncluded)
                 Navigation.findNavController(binding.root).navigate(
                     R.id.action_open_call_fragment,
                     bundle
@@ -331,10 +335,11 @@ class DialCallFragment : CallMangerListenerFragment() {
     override fun onCameraStreamReceived(stream: VideoTrack) {}
     override fun onCameraAudioOff(
         sessionStateInfo: SessionStateInfo, isMultySession: Boolean
-    ) {}
+    ) {
+    }
 
     override fun onCallRejected(reason: String) {
-//        closeFragmentWithMessage(reason)
+//     closeFragmentWithMessage("Call Missed!")
     }
 
     override fun onCallerAlreadyBusy() {
@@ -351,17 +356,18 @@ class DialCallFragment : CallMangerListenerFragment() {
 
     override fun acceptedUser(participantCount: Int) {
         participantsCount = participantCount - 1
-           }
+    }
 
     override fun onCallMissed() {
-       closeFragmentWithMessage("Call Missed!")
+        closeFragmentWithMessage("Call Missed!")
     }
 
     override fun onCallEnd() {
         activity?.runOnUiThread {
             try {
                 (activity as DashBoardActivity).isMultiSession = false
-                Navigation.findNavController(binding.root).navigate(R.id.action_open_selection_fragment)
+                Navigation.findNavController(binding.root)
+                    .navigate(R.id.action_open_selection_fragment)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -369,12 +375,13 @@ class DialCallFragment : CallMangerListenerFragment() {
     }
 
     override fun onPublicURL(publicURL: String) {
-       //// TODO("Not yet implemented")
+        //// TODO("Not yet implemented")
     }
 
     override fun checkCallType() {
         if ((screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
-            || (screenSharingApp && isInternalAudioIncluded)){
+            || (screenSharingApp && isInternalAudioIncluded)
+        ) {
             moveToDashboard()
         }
     }
@@ -385,6 +392,7 @@ class DialCallFragment : CallMangerListenerFragment() {
         startMain.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(startMain)
     }
+
     private fun closeFragmentWithMessage(message: String?) {
         activity?.runOnUiThread {
             (activity as DashBoardActivity).callParams1 = null
@@ -392,6 +400,7 @@ class DialCallFragment : CallMangerListenerFragment() {
             onCallEnd()
         }
     }
+
     override fun onInsufficientBalance() {
         closeFragmentWithMessage("Insufficient Balance!")
     }

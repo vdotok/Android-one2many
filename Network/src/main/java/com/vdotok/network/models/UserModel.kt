@@ -42,5 +42,6 @@ data class UserModel (
 
 @Parcelize
 data class CallerData (
-    var calleName: String? = null
+    var calleName: String? = null,
+    var groupName: String? = null
 ): Parcelable{}

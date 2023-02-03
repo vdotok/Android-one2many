@@ -24,7 +24,7 @@
     <string name="group_updated">Group Updated</string>
     <string name="group_created">Group created success</string>
     <string name="add_group_title">Create a group chat</string>
-    <string name="name_group_chat">Creating your URL...</string>
+    <string name="name_group_chat">Name your group chat...</string>
     <string name="hint_search_bar">Search</string>
     <string name="createGroupText">Create Group</string>
     <string name="hint_chat_text_field">Type a Message</string>

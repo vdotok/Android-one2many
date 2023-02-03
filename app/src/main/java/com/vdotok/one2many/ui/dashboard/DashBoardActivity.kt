@@ -26,6 +26,7 @@ import com.vdotok.network.models.LoginResponse
 import com.vdotok.one2many.R
 import com.vdotok.one2many.VdoTok
 import com.vdotok.one2many.databinding.ActivityDashBoardBinding
+import com.vdotok.one2many.extensions.showSnackBar
 import com.vdotok.one2many.interfaces.FragmentRefreshListener
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.utils.ApplicationConstants
@@ -203,7 +204,8 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     fun incomingUserName() {
         val callerData = CallerData(
-            calleName = incomingName
+            calleName = incomingName,
+            groupName = incomingName
         )
         callerName = JSONObject(gson.toJson(callerData))
     }
@@ -412,7 +414,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         if (callParams.customDataPacket != null) {
             val dataValue = JSONObject(callParams.customDataPacket.toString())
             val callerName: CallerData = gson.fromJson(dataValue.toString(), CallerData::class.java)
-            callParams.customDataPacket = callerName.calleName
+            callParams.customDataPacket = if (callerName.groupName.isNullOrEmpty()) callerName.calleName else callerName.groupName
         }
         sessionIdList.add(callParams.sessionUUID)
         isCallInitiator = false
@@ -707,6 +709,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                     userModel?.let {
                         prefs.loginInfo = it
                     }
+                    binding.root.showSnackBar("Socket Connected!")
                     callClient.initiateReInviteProcess()
                 }
 

@@ -1,6 +1,8 @@
 package com.vdotok.one2many
 
 import android.app.Application
+import android.os.Handler
+import android.os.Looper
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
@@ -10,6 +12,7 @@ import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.enums.MediaType
 import com.vdotok.streaming.enums.SessionType
 import com.vdotok.streaming.models.CallParams
+import org.webrtc.EglBase
 
 
 /**
@@ -19,14 +22,17 @@ import com.vdotok.streaming.models.CallParams
 class VdoTok : Application() {
 
     lateinit var callClient: CallClient
-    private lateinit var prefs: Prefs
+    lateinit var prefs: Prefs
     var callParam1: CallParams? = null
     var callParam2: CallParams? = null
     var camView: Boolean = true
+    private val rootEglBase: EglBase = EglBase.create()
+    val rootEglBaseContext: EglBase.Context = rootEglBase.eglBaseContext
+    var appIsActive = false
     private var lifecycleEventObserver = LifecycleEventObserver { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                connectClient()
+                if(appIsActive) connectClient()
                 if ((callParam1?.mediaType == MediaType.VIDEO && callParam1?.sessionType == SessionType.CALL) || (callParam2?.mediaType == MediaType.VIDEO && callParam2?.sessionType == SessionType.CALL)) {
                     if (camView) {
                         if (callParam1?.sessionType == SessionType.CALL) {
@@ -70,17 +76,25 @@ class VdoTok : Application() {
                     }
                 }
             }
+            Lifecycle.Event.ON_DESTROY -> {
+                appIsActive = false
+                rootEglBase.release()
+            }
             else -> {}
         }
     }
 
     private fun connectClient() {
-        prefs.loginInfo?.mediaServer?.let {
-            if (!callClient.isConnected())
-                callClient.connect(
-                    getMediaServerAddress(it),
-                    it.endPoint
-                )
+        if (!callClient.isConnected()) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                prefs.loginInfo?.mediaServer?.let {
+                    if (!callClient.isConnected())
+                        callClient.connect(
+                            getMediaServerAddress(it),
+                            it.endPoint
+                        )
+                }
+            }, 1000)
         }
     }
 

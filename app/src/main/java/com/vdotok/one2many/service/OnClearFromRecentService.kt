@@ -36,6 +36,11 @@ class OnClearFromRecentService : Service() {
         (application as VdoTok).callParam1 = null
         (application as VdoTok).callParam2 = null
         (application as VdoTok).callClient.endCallSession(sessionList)
+        (application as VdoTok).prefs.loginInfo?.let {
+            (application as VdoTok).callClient.unRegister(
+                ownRefId = it.refId.toString()
+            )
+        }
         (application as VdoTok).callClient.disConnectSocket()
         stopSelf()
     }

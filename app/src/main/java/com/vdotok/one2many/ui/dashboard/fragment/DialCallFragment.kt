@@ -382,7 +382,7 @@ class DialCallFragment : CallMangerListenerFragment() {
         if ((screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
             || (screenSharingApp && isInternalAudioIncluded)
         ) {
-            moveToDashboard()
+//            moveToDashboard()
         }
     }
 

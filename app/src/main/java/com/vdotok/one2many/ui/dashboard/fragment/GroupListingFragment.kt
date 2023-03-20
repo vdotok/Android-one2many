@@ -7,6 +7,7 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -108,7 +109,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         binding.customToolbar.imgArrowBack.hide()
 
         binding.customToolbar.imgDone.setOnClickListener {
-          openUserListFragment(screenSharingApp,screenSharingMic,cameraCall,isInternalAudioIncluded)
+            openUserListFragment(screenSharingApp,screenSharingMic,cameraCall,isInternalAudioIncluded)
         }
 
         binding.btnNewChat.setOnClickListener {
@@ -205,9 +206,9 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     override fun onEditClick(groupModel: GroupModel) {
         activity?.supportFragmentManager?.let {
             UpdateGroupNameDialog(groupModel, this::getAllGroups).show(
-            it,
-            UpdateGroupNameDialog.UPDATE_GROUP_TAG
-        ) }
+                it,
+                UpdateGroupNameDialog.UPDATE_GROUP_TAG
+            ) }
 
     }
 
@@ -226,17 +227,17 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
 
     override fun onGroupClick(groupModel: GroupModel) {
         if (groupModel.autoCreated == 1 ){
-                    (activity as DashBoardActivity).incomingName = prefs.loginInfo?.fullName
+            (activity as DashBoardActivity).incomingName = prefs.loginInfo?.fullName
         }else {
             (activity as DashBoardActivity).incomingName = groupModel.groupTitle.toString()
         }
         (activity as DashBoardActivity).incomingUserName()
         this.groupModel = groupModel
         if ((screenSharingApp && isInternalAudioIncluded && cameraCall) || (screenSharingMic && !isInternalAudioIncluded && cameraCall)
-                ||(screenSharingApp && !isInternalAudioIncluded && cameraCall) ||
-                (screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
+            ||(screenSharingApp && !isInternalAudioIncluded && cameraCall) ||
+            (screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
             || (screenSharingApp && isInternalAudioIncluded)){
-                      startScreenCapture()
+            startScreenCapture()
         } else {
             dialOneToOneCall(mediaType = MediaType.VIDEO,sessionType = SessionType.CALL)
         }
@@ -373,18 +374,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
             it.runOnUiThread {
                 openCallFragment(toPeer, isVideo)
             }
-        }
-    }
-
-    override fun navDialCall() {
-        groupModel?.let {
-            outGoingCall(it)
-        } ?: kotlin.run {
-            activity?.runOnUiThread {
-                Toast.makeText(activity, "Group Model is Empty!", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
+        }    }
 
     /**
      * Function to pass data at outgoing side call
@@ -400,7 +390,11 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         bundle.putBoolean("screenMic",screenSharingMic)
         bundle.putBoolean("video",cameraCall)
         bundle.putBoolean("internalAudio",isInternalAudioIncluded)
-        Navigation.findNavController(binding.root).navigate(R.id.action_open_dial_fragment, bundle)
+        try {
+            Navigation.findNavController(binding.root).navigate(R.id.action_open_dial_fragment, bundle)
+        } catch (ex: Exception) {
+            Log.e("NavigationIssue", "openCallFragment: ${ex.printStackTrace()}", )
+        }
     }
 
 
@@ -421,7 +415,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
     override fun onPublicURL(publicURL: String) {
-       //// TODO("Not yet implemented")
+        //// TODO("Not yet implemented")
     }
 
     override fun onConnectionSuccess() {
@@ -429,7 +423,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
     override fun onConnectionFail() {
-      binding.tvLed.setImageResource(R.drawable.led_error)
+        binding.tvLed.setImageResource(R.drawable.led_error)
     }
 
     override fun checkCallType() {
@@ -448,7 +442,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
     override fun acceptedUser(participantCount: Int) {
-      ////  TODO("Not yet implemented")
+        ////  TODO("Not yet implemented")
     }
 
     private fun initiatePublicMultiBroadcast(internalAudioIncluded: Boolean, mediaProjection: MediaProjection?, isGroupSession: Boolean) {
@@ -462,22 +456,33 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
 
             prefs.loginInfo?.let {
                 (activity as DashBoardActivity).dialOne2ManyPublicCall(
-                        callParams = CallParams(
-                                refId = it.refId!!,
-                                toRefIds = refIdList,
-                                callType = CallType.ONE_TO_MANY,
-                                isAppAudio = isInternalAudioIncluded,
-                                mediaType = MediaType.VIDEO,
-                                customDataPacket = (activity as DashBoardActivity).callerName.toString()
-                        ),
-                        mediaProjection,
-                        isGroupSession
+                    callParams = CallParams(
+                        refId = it.refId!!,
+                        toRefIds = refIdList,
+                        callType = CallType.ONE_TO_MANY,
+                        isAppAudio = isInternalAudioIncluded,
+                        mediaType = MediaType.VIDEO,
+                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
+                    ),
+                    mediaProjection,
+                    isGroupSession
                 )
             }
+
         } else {
             (activity as DashBoardActivity).connectClient()
         }
 
+    }
+
+    override fun navDialCall() {
+        groupModel?.let {
+            outGoingCall(it)
+        }?: kotlin.run {
+            activity?.runOnUiThread {
+                Toast.makeText(activity, "Group Model is Empty!", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onIncomingCall(model: CallParams) {

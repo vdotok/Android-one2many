@@ -42,7 +42,6 @@ import com.vdotok.streaming.models.*
 import com.vdotok.streaming.utils.checkInternetAvailable
 import org.json.JSONObject
 import org.webrtc.VideoTrack
-import java.util.LinkedHashMap
 
 /**
  * Created By: VdoTok
@@ -128,7 +127,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 isInternetConnected == true && isInternetConnectionRestored && !isResumeState -> {
                     mListener?.onConnectionSuccess()
                     Log.e("Internet", "internet connection restored!")
-                    performSocketReconnection()
+                    if (!callClient.isConnected()) performSocketReconnection()
                 }
                 isInternetConnected == false -> {
                     isInternetConnectionRestored = true
@@ -400,13 +399,19 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     override fun incomingCall(callParams: CallParams) {
+//        get the username or the group name
         if (callParams.customDataPacket != null) {
             val dataValue = JSONObject(callParams.customDataPacket.toString())
             val callerName: CallerData = gson.fromJson(dataValue.toString(), CallerData::class.java)
-            callParams.customDataPacket = if (callerName.groupName.isNullOrEmpty()) callerName.calleName else callerName.groupName
+            callParams.customDataPacket =
+                if (callerName.groupName.isNullOrEmpty()) callerName.calleName else callerName.groupName
         }
-        sessionIdList.add(callParams.sessionUUID)
-        isCallInitiator = false
+
+        if (!sessionIdList.contains(callParams.sessionUUID)) sessionIdList.add(callParams.sessionUUID)
+        if (callParams.associatedSessionUUID.isNotEmpty() && !sessionIdList.contains(callParams.associatedSessionUUID)) sessionIdList.add(
+            callParams.associatedSessionUUID
+        )
+
         if (sessionId?.let { callClient.getActiveSessionClient(it) } != null || sessionId2?.let {
                 callClient.getActiveSessionClient(
                     it
@@ -504,6 +509,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         isCallInitiator = true
         isCallInitiator2 = true
         sessionId = callClient.startSession(callParams, mediaProjection)
+        sessionId?.let { sessionIdList.add(it) }
         sessionId?.let { participantList[it] = callParams.toRefIds }
         callParams.sessionUUID = sessionId.toString()
         callParams1 = callParams
@@ -546,6 +552,8 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     override fun multiSessionCreated(sessionIds: Pair<String, String>) {
         callParams1?.sessionUUID = sessionIds.first
         callParams2?.sessionUUID = sessionIds.second
+        sessionIdList.add(sessionIds.first)
+        sessionIdList.add(sessionIds.second)
         (application as VdoTok).callParam2 = callParams2
         (application as VdoTok).callParam1 = callParams1
         callParams1?.let { participantList[sessionIds.first] = it.toRefIds }
@@ -558,6 +566,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     fun dialOne2ManyVideoCall(callParams: CallParams) {
         sessionId2 = callClient.dialOne2ManyCall(callParams)
         callParams.sessionUUID = sessionId2.toString()
+        sessionIdList.add(callParams.sessionUUID)
         callParams2 = callParams
         (application as VdoTok).callParam2 = callParams2
         (application as VdoTok).callParam1 = null
@@ -748,20 +757,22 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 isMulti = false
                 isMultiSession = false
                 enableButton = false
+                sessionIdList.remove(callInfoResponse.callParams?.sessionUUID)
                 mLiveDataEndCall.postValue(true)
             }
 
             CallStatus.TARGET_IS_BUSY,
+            CallStatus.TARGET_NOT_FOUND,
             CallStatus.SESSION_BUSY -> {
-
                 if (sessionIdList.contains(callInfoResponse.callParams?.sessionUUID)) {
                     sessionIdList.remove(callInfoResponse.callParams?.sessionUUID)
                 }
                 if (sessionIdList.isEmpty() && dialCallOpen) {
-                    if (isCallInitiator && isCallInitiator2)
+                    if (isCallInitiator && isCallInitiator2) {
                         mListener?.onCallerAlreadyBusy()
-                    else
+                    } else {
                         mLiveDataEndCall.postValue(true)
+                    }
                 }
             }
 //            CallStatus.TARGET_IS_BUSY -> {
@@ -769,6 +780,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 //            }
 
             CallStatus.CALL_MISSED -> {
+                sessionIdList.remove(callInfoResponse.callParams?.sessionUUID)
                 sessionId?.let {
                     if (callClient.getActiveSessionClient(it) == null)
                         mLiveDataEndCall.postValue(true)
@@ -779,6 +791,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
 
             CallStatus.CALL_REJECTED -> {
+                sessionIdList.remove(callInfoResponse.callParams?.sessionUUID)
                 if (participantList.containsKey(callInfoResponse.callParams?.sessionUUID)) {
                     val list = participantList[callInfoResponse.callParams?.sessionUUID]
                     list?.let {
@@ -795,7 +808,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 }
             }
 
-            CallStatus.PARTICIPANT_LEFT_CALL, CallStatus.NO_ANSWER_FROM_TARGET  -> {
+            CallStatus.PARTICIPANT_LEFT_CALL, CallStatus.NO_ANSWER_FROM_TARGET -> {
                 mLiveDataLeftParticipant.postValue(callInfoResponse.callParams?.toRefIds?.get(0))
             }
             CallStatus.INSUFFICIENT_BALANCE -> {

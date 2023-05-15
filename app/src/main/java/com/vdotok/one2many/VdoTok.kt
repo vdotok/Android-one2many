@@ -38,24 +38,24 @@ class VdoTok : Application() {
                         if (callParam1?.sessionType == SessionType.CALL) {
                             callClient.resumeVideo(
                                 prefs.loginInfo?.refId.toString(),
-                                callParam1?.sessionUUID.toString()
+                                callParam1?.sessionUuid.toString()
                             )
                         } else {
                             callClient.resumeVideo(
                                 prefs.loginInfo?.refId.toString(),
-                                callParam2?.sessionUUID.toString()
+                                callParam2?.sessionUuid.toString()
                             )
                         }
                     } else {
                         if (callParam1?.sessionType == SessionType.CALL) {
                             callClient.pauseVideo(
                                 prefs.loginInfo?.refId.toString(),
-                                callParam1?.sessionUUID.toString()
+                                callParam1?.sessionUuid.toString()
                             )
                         } else {
                             callClient.pauseVideo(
                                 prefs.loginInfo?.refId.toString(),
-                                callParam2?.sessionUUID.toString()
+                                callParam2?.sessionUuid.toString()
                             )
                         }
                     }
@@ -66,12 +66,12 @@ class VdoTok : Application() {
                     if (callParam1?.sessionType == SessionType.CALL) {
                         callClient.pauseVideo(
                             prefs.loginInfo?.refId.toString(),
-                            callParam1?.sessionUUID.toString()
+                            callParam1?.sessionUuid.toString()
                         )
                     } else {
                         callClient.pauseVideo(
                             prefs.loginInfo?.refId.toString(),
-                            callParam2?.sessionUUID.toString()
+                            callParam2?.sessionUuid.toString()
                         )
                     }
                 }

@@ -215,26 +215,26 @@ class DialCallFragment : CallMangerListenerFragment() {
             prefs.loginInfo?.let {
                 if ((activity as DashBoardActivity).callParams1 != null && (activity as DashBoardActivity).callParams2 != null) {
                     (activity as DashBoardActivity).callParams1?.let { it1 ->
-                        (activity as DashBoardActivity).sessionIdList.remove(it1.sessionUUID)
+                        (activity as DashBoardActivity).sessionIdList.remove(it1.sessionUuid)
                         callClient.rejectIncomingCall(
                             it.refId!!,
-                            it1.sessionUUID
+                            it1.sessionUuid
                         )
                     }
                     (activity as DashBoardActivity).callParams2?.let { it1 ->
-                        (activity as DashBoardActivity).sessionIdList.remove(it1.sessionUUID)
+                        (activity as DashBoardActivity).sessionIdList.remove(it1.sessionUuid)
                         callClient.rejectIncomingCall(
                             it.refId!!,
-                            it1.sessionUUID
+                            it1.sessionUuid
                         )
 
                     }
                 } else if ((activity as DashBoardActivity).callParams1 != null) {
                     (activity as DashBoardActivity).callParams1?.let { it1 ->
-                        (activity as DashBoardActivity).sessionIdList.remove(it1.sessionUUID)
+                        (activity as DashBoardActivity).sessionIdList.remove(it1.sessionUuid)
                         callClient.rejectIncomingCall(
                             it.refId!!,
-                            it1.sessionUUID
+                            it1.sessionUuid
                         )
 
                     }
@@ -242,7 +242,7 @@ class DialCallFragment : CallMangerListenerFragment() {
                     (activity as DashBoardActivity).callParams2?.let { it1 ->
                         callClient.rejectIncomingCall(
                             it.refId!!,
-                            it1.sessionUUID
+                            it1.sessionUuid
                         )
 
                     }

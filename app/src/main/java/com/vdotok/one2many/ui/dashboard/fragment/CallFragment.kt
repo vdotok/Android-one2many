@@ -88,6 +88,7 @@ class CallFragment : CallMangerListenerFragment() {
     var loop = 0
     var swap = false
     var isCamSwitch = false
+    var isInitiator = false
 
     private lateinit var screenRemoteViewReference: CustomCallView
     private lateinit var videoRemoteViewReference:  CustomCallView
@@ -126,6 +127,8 @@ class CallFragment : CallMangerListenerFragment() {
         isVideoCameraCall = arguments?.getBoolean(DialCallFragment.IS_VIDEO_CALL) ?: false
         isScreenSharingCall = arguments?.getBoolean(DialCallFragment.IS_VIDEO_CALL)?: false
         arguments?.get(GroupModel.TAG)?.let {
+//            this is for initiator
+            isInitiator = true
             groupModel = it as GroupModel?
             isIncomingCall = arguments?.get("isIncoming") as Boolean
             getUserName(groupModel!!,isVideoCameraCall)
@@ -135,6 +138,8 @@ class CallFragment : CallMangerListenerFragment() {
             participantsCount = arguments?.getInt("participantsCount")!!
             isInternalAudioIncluded = arguments?.getBoolean("internalAudio")?: false
         } ?: kotlin.run {
+//            this is for receiver
+            isInitiator = false
             groupList = arguments?.getParcelableArrayList<GroupModel>("grouplist") as ArrayList<GroupModel>
             name = (arguments?.get("userName") as CharSequence?).toString()
             callParams = arguments?.getParcelable(AcceptCallModel.TAG) as CallParams?
@@ -149,7 +154,10 @@ class CallFragment : CallMangerListenerFragment() {
             stopTimer()
             (activity as DashBoardActivity).endCall()
             releaseCallView()
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            if (!isInitiator)
+                startActivity(Intent.makeRestartActivityTask(activity?.intent?.component))
+            else
+                Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         }
 
 
@@ -455,7 +463,7 @@ class CallFragment : CallMangerListenerFragment() {
 
     override fun onRemoteStreamReceived(stream: VideoTrack, refId: String, sessionID: String, isCameraStream: Boolean) {
         activity?.runOnUiThread {
-            if ((activity as DashBoardActivity).callParams1?.sessionUUID == sessionID) {
+            if ((activity as DashBoardActivity).callParams1?.sessionUuid == sessionID) {
                 binding.remoteView.preview.setMirror(false)
                 setUserNameUI(refId)
                 try {
@@ -514,7 +522,8 @@ class CallFragment : CallMangerListenerFragment() {
     override fun onCameraAudioOff(sessionStateInfo: SessionStateInfo, isMultySession: Boolean) {
         activity?.runOnUiThread {
             Log.d("sessionState", sessionStateInfo.toString())
-            if (!(activity as DashBoardActivity).callParams1?.sessionUUID.isNullOrEmpty() && !(activity as DashBoardActivity).callParams2?.sessionUUID.isNullOrEmpty()) {
+            if (!(activity as DashBoardActivity).callParams1?.sessionUuid.isNullOrEmpty() &&
+                !(activity as DashBoardActivity).callParams2?.sessionUuid.isNullOrEmpty()) {
                 if (sessionStateInfo.isScreenShare == true) {
                     when {
                         sessionStateInfo.videoState == 1 -> {
@@ -571,7 +580,9 @@ class CallFragment : CallMangerListenerFragment() {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
             Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+            Log.e("Navigation Error!", "onCallMissed: ${e.message}")
+        }
     }
 
     override fun onCallEnd() {
@@ -579,8 +590,13 @@ class CallFragment : CallMangerListenerFragment() {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
             releaseCallView()
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
-        } catch (e: Exception) {}
+            if (!isInitiator)
+                startActivity(Intent.makeRestartActivityTask(activity?.intent?.component))
+            else
+                Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+        } catch (e: Exception) {
+            Log.e("Navigation Error!", "onCallEnd: ${e.message}")
+        }
     }
 
     override fun onPublicURL(publicURL: String) {

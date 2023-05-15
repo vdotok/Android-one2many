@@ -149,9 +149,9 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
                 acceptCallModel?.let { it1 ->
                     callClient.rejectIncomingCall(
                         it.refId!!,
-                        it1.sessionUUID
+                        it1.sessionUuid
                     )
-                    (activity as DashBoardActivity).sessionIdList.remove(it1.sessionUUID)
+                    (activity as DashBoardActivity).sessionIdList.remove(it1.sessionUuid)
                 }
             }
         } else {

@@ -274,24 +274,24 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     fun muteUnMuteCall(screenShare: Boolean) {
         val session = if (screenShare) {
             when (SessionType.SCREEN) {
-                callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams1?.sessionUUID.toString()
+                    callParams1?.sessionUuid.toString()
                 }
-                callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams2?.sessionUUID.toString()
+                    callParams2?.sessionUuid.toString()
                 }
                 else -> null
             }
-        } else if (callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
+        } else if (callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
                 ?.getSessionType() == SessionType.CALL
         ) {
-            callParams1?.sessionUUID.toString()
-        } else if (callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
+            callParams1?.sessionUuid.toString()
+        } else if (callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
                 ?.getSessionType() == SessionType.CALL
         ) {
-            callParams2?.sessionUUID.toString()
+            callParams2?.sessionUuid.toString()
         } else null
 
         session?.let {
@@ -312,14 +312,14 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
      * Function to switch Camera
      * */
     fun switchCamera() {
-        val session = if (callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
+        val session = if (callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
                 ?.getSessionType() == SessionType.CALL
         ) {
-            callParams1?.sessionUUID.toString()
-        } else if (callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
+            callParams1?.sessionUuid.toString()
+        } else if (callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
                 ?.getSessionType() == SessionType.CALL
         ) {
-            callParams2?.sessionUUID.toString()
+            callParams2?.sessionUuid.toString()
         } else null
         session?.let { callClient.switchCamera(it) }
     }
@@ -407,9 +407,9 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 if (callerName.groupName.isNullOrEmpty()) callerName.calleName else callerName.groupName
         }
 
-        if (!sessionIdList.contains(callParams.sessionUUID)) sessionIdList.add(callParams.sessionUUID)
-        if (callParams.associatedSessionUUID.isNotEmpty() && !sessionIdList.contains(callParams.associatedSessionUUID)) sessionIdList.add(
-            callParams.associatedSessionUUID
+        if (!sessionIdList.contains(callParams.sessionUuid)) sessionIdList.add(callParams.sessionUuid)
+        if (callParams.associatedSessionUuid.isNotEmpty() && !sessionIdList.contains(callParams.associatedSessionUuid)) sessionIdList.add(
+            callParams.associatedSessionUuid
         )
 
         if (sessionId?.let { callClient.getActiveSessionClient(it) } != null || sessionId2?.let {
@@ -417,11 +417,11 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                     it
                 )
             } != null || dialCallOpen) {
-            if (callParams.associatedSessionUUID.isEmpty()) { // it is a single session
-                callClient.sessionBusy(callParams.refId, callParams.sessionUUID)
+            if (callParams.associatedSessionUuid.isEmpty()) { // it is a single session
+                callClient.sessionBusy(callParams.refId, callParams.sessionUuid)
             } else { // it is a multi session
-                callClient.sessionBusy(callParams.refId, callParams.sessionUUID)
-                callClient.sessionBusy(callParams.refId, callParams.associatedSessionUUID)
+                callClient.sessionBusy(callParams.refId, callParams.sessionUuid)
+                callClient.sessionBusy(callParams.refId, callParams.associatedSessionUuid)
             }
         } else {
             if (callParams1 == null) {
@@ -438,7 +438,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 }
                 (application as VdoTok).callParam1 = null
                 (application as VdoTok).callParam2 = null
-            } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUUID.isEmpty()) {
+            } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUuid.isEmpty()) {
                 callParams1?.let {
                     mListener?.onIncomingCall(it)
                     (application as VdoTok).callParam1 = null
@@ -449,7 +449,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
         Log.d(
             "incomingCall",
-            " incomingCall callParam : " + callParams1?.sessionUUID.toString() + "-- callParams2" + callParams2?.sessionUUID.toString()
+            " incomingCall callParam : " + callParams1?.sessionUuid.toString() + "-- callParams2" + callParams2?.sessionUuid.toString()
         )
     }
 
@@ -475,7 +475,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 callClient.acceptIncomingCall(it.refId.toString(), it1)
             }
             if (isMultiSession) {
-                if (!callParams1?.sessionUUID.isNullOrEmpty() && !callParams2?.sessionUUID.isNullOrEmpty()) {
+                if (!callParams1?.sessionUuid.isNullOrEmpty() && !callParams2?.sessionUuid.isNullOrEmpty()) {
                     enableButton = true
                 }
             }
@@ -493,11 +493,11 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     fun acceptIncomingCall(callParams: CallParams) {
         prefs.loginInfo?.let {
             sessionId = callClient.acceptIncomingCall(it.refId.toString(), callParams)
-            callParams.sessionUUID = sessionId.toString()
+            callParams.sessionUuid = sessionId.toString()
         }
         callParams1 = callParams
         if (!isMultiSession) {
-            if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()) {
+            if (!callParams1?.sessionUuid.isNullOrEmpty() || !callParams2?.sessionUuid.isNullOrEmpty()) {
                 enableButton = true
             }
         } else {
@@ -511,12 +511,12 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         sessionId = callClient.startSession(callParams, mediaProjection)
         sessionId?.let { sessionIdList.add(it) }
         sessionId?.let { participantList[it] = callParams.toRefIds }
-        callParams.sessionUUID = sessionId.toString()
+        callParams.sessionUuid = sessionId.toString()
         callParams1 = callParams
         (application as VdoTok).callParam1 = callParams1
         (application as VdoTok).callParam2 = null
         mListener?.navDialCall()
-        if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()) {
+        if (!callParams1?.sessionUuid.isNullOrEmpty() || !callParams2?.sessionUuid.isNullOrEmpty()) {
             enableButton = true
         }
 
@@ -534,7 +534,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             callParams.refId,
             callParams.toRefIds,
             callParams.mcToken,
-            callParams.sessionUUID,
+            callParams.sessionUuid,
             callParams.requestId
         )
         callParams2 = callParams.copy()
@@ -550,28 +550,28 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     override fun multiSessionCreated(sessionIds: Pair<String, String>) {
-        callParams1?.sessionUUID = sessionIds.first
-        callParams2?.sessionUUID = sessionIds.second
+        callParams1?.sessionUuid = sessionIds.first
+        callParams2?.sessionUuid = sessionIds.second
         sessionIdList.add(sessionIds.first)
         sessionIdList.add(sessionIds.second)
         (application as VdoTok).callParam2 = callParams2
         (application as VdoTok).callParam1 = callParams1
         callParams1?.let { participantList[sessionIds.first] = it.toRefIds }
         mListener?.navDialCall()
-        if (!callParams1?.sessionUUID.isNullOrEmpty() && !callParams2?.sessionUUID.isNullOrEmpty()) {
+        if (!callParams1?.sessionUuid.isNullOrEmpty() && !callParams2?.sessionUuid.isNullOrEmpty()) {
             enableButton = true
         }
     }
 
     fun dialOne2ManyVideoCall(callParams: CallParams) {
         sessionId2 = callClient.dialOne2ManyCall(callParams)
-        callParams.sessionUUID = sessionId2.toString()
-        sessionIdList.add(callParams.sessionUUID)
+        callParams.sessionUuid = sessionId2.toString()
+        sessionIdList.add(callParams.sessionUuid)
         callParams2 = callParams
         (application as VdoTok).callParam2 = callParams2
         (application as VdoTok).callParam1 = null
         mListener?.navDialCall()
-        if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()) {
+        if (!callParams1?.sessionUuid.isNullOrEmpty() || !callParams2?.sessionUuid.isNullOrEmpty()) {
             enableButton = true
         }
     }
@@ -585,10 +585,10 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             localStreamVideo = null
             localStreamScreen = null
             val sessionList = ArrayList<String>().apply {
-                callParams1?.sessionUUID?.let {
+                callParams1?.sessionUuid?.let {
                     add(it)
                 }
-                callParams2?.sessionUUID?.let {
+                callParams2?.sessionUuid?.let {
                     add(it)
                 }
             }
@@ -601,15 +601,15 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     private fun turnMicState() {
         if (callParams1?.isInitiator == true || callParams2?.isInitiator == true) {
-            if (!callClient.isAudioEnabled(callParams1?.sessionUUID.toString())) {
+            if (!callClient.isAudioEnabled(callParams1?.sessionUuid.toString())) {
                 callClient.muteUnMuteMic(
                     callParams1?.refId.toString(),
-                    callParams1?.sessionUUID.toString()
+                    callParams1?.sessionUuid.toString()
                 )
-            } else if (!callClient.isAudioEnabled(callParams2?.sessionUUID.toString())) {
+            } else if (!callClient.isAudioEnabled(callParams2?.sessionUuid.toString())) {
                 callClient.muteUnMuteMic(
                     callParams2?.refId.toString(),
-                    callParams2?.sessionUUID.toString()
+                    callParams2?.sessionUuid.toString()
                 )
             }
         }
@@ -619,26 +619,26 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
         val session = if (isScreenShare) {
             when (SessionType.SCREEN) {
-                callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams1?.sessionUUID.toString()
+                    callParams1?.sessionUuid.toString()
                 }
-                callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams2?.sessionUUID.toString()
+                    callParams2?.sessionUuid.toString()
                 }
                 else -> null
             }
         } else {
 
             when (SessionType.CALL) {
-                callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams1?.sessionUUID.toString()
+                    callParams1?.sessionUuid.toString()
                 }
-                callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams2?.sessionUUID.toString()
+                    callParams2?.sessionUuid.toString()
                 }
                 else -> null
             }
@@ -663,26 +663,26 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         val session = if (isScreenShare) {
             // in case of screen sharing no change video state of camera
             when (SessionType.SCREEN) {
-                callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams1?.sessionUUID.toString()
+                    callParams1?.sessionUuid.toString()
                 }
-                callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams2?.sessionUUID.toString()
+                    callParams2?.sessionUuid.toString()
                 }
                 else -> null
             }
         } else {
 
             when (SessionType.CALL) {
-                callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams1?.sessionUUID.toString()
+                    callParams1?.sessionUuid.toString()
                 }
-                callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
                     ?.getSessionType() -> {
-                    callParams2?.sessionUUID.toString()
+                    callParams2?.sessionUuid.toString()
                 }
                 else -> null
             }
@@ -757,15 +757,15 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 isMulti = false
                 isMultiSession = false
                 enableButton = false
-                sessionIdList.remove(callInfoResponse.callParams?.sessionUUID)
+                sessionIdList.remove(callInfoResponse.callParams?.sessionUuid)
                 mLiveDataEndCall.postValue(true)
             }
 
             CallStatus.TARGET_IS_BUSY,
             CallStatus.TARGET_NOT_FOUND,
             CallStatus.SESSION_BUSY -> {
-                if (sessionIdList.contains(callInfoResponse.callParams?.sessionUUID)) {
-                    sessionIdList.remove(callInfoResponse.callParams?.sessionUUID)
+                if (sessionIdList.contains(callInfoResponse.callParams?.sessionUuid)) {
+                    sessionIdList.remove(callInfoResponse.callParams?.sessionUuid)
                 }
                 if (sessionIdList.isEmpty() && dialCallOpen) {
                     if (isCallInitiator && isCallInitiator2) {
@@ -780,7 +780,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 //            }
 
             CallStatus.CALL_MISSED -> {
-                sessionIdList.remove(callInfoResponse.callParams?.sessionUUID)
+                sessionIdList.remove(callInfoResponse.callParams?.sessionUuid)
                 sessionId?.let {
                     if (callClient.getActiveSessionClient(it) == null)
                         mLiveDataEndCall.postValue(true)
@@ -791,9 +791,9 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
 
             CallStatus.CALL_REJECTED -> {
-                sessionIdList.remove(callInfoResponse.callParams?.sessionUUID)
-                if (participantList.containsKey(callInfoResponse.callParams?.sessionUUID)) {
-                    val list = participantList[callInfoResponse.callParams?.sessionUUID]
+                sessionIdList.remove(callInfoResponse.callParams?.sessionUuid)
+                if (participantList.containsKey(callInfoResponse.callParams?.sessionUuid)) {
+                    val list = participantList[callInfoResponse.callParams?.sessionUuid]
                     list?.let {
                         if (it.size > 1) {
                             it.remove(callInfoResponse.callParams?.refId)

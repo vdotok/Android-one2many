@@ -6,6 +6,7 @@ import android.media.MediaPlayer
 import android.media.projection.MediaProjection
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -183,9 +184,10 @@ class DialCallFragment : CallMangerListenerFragment() {
      * Function to set data when incoming call dial is implemented and setonClickListener
      * */
     private fun setDataForIncomingCall() {
-
         player = MediaPlayer.create(this.requireContext(), Settings.System.DEFAULT_RINGTONE_URI)
-        player?.start()
+
+
+        playTone()
         if (username.isNullOrEmpty()) {
             userName.set("User")
         } else {
@@ -270,6 +272,21 @@ class DialCallFragment : CallMangerListenerFragment() {
         timerFro30sec?.cancel()
     }
 
+    private fun playTone() {
+        player?.let {
+            if (!it.isPlaying)
+                player?.start()
+        }
+    }
+
+    private fun stopTune() {
+        player?.let {
+            if (it.isPlaying)
+                player?.stop()
+        }
+        player = null
+    }
+
     override fun onDetach() {
         timerFro30sec?.cancel()
         super.onDetach()
@@ -277,10 +294,19 @@ class DialCallFragment : CallMangerListenerFragment() {
     }
 
     override fun onDestroy() {
+        Log.e("NavTest", "onDestroy: ")
         timerFro30sec?.cancel()
         (activity as DashBoardActivity).dialCallOpen = false
         super.onDestroy()
-        player?.stop()
+        stopTune()
+    }
+
+    override fun onDestroyView() {
+        Log.e("NavTest", "onDestroyView: ")
+        timerFro30sec?.cancel()
+        (activity as DashBoardActivity).dialCallOpen = false
+        super.onDestroyView()
+        stopTune()
     }
 
     /**

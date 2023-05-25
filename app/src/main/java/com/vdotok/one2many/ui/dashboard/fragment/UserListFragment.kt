@@ -16,7 +16,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import com.google.android.material.snackbar.Snackbar
-import com.vdotok.network.models.*
+import com.vdotok.network.models.CreateGroupModel
+import com.vdotok.network.models.CreateGroupResponse
+import com.vdotok.network.models.GetAllUsersResponseModel
+import com.vdotok.network.models.UserModel
+import com.vdotok.network.network.HttpResponseCodes
+import com.vdotok.network.network.NetworkConnectivity
+import com.vdotok.network.network.Result
 import com.vdotok.one2many.R
 import com.vdotok.one2many.adapter.AllUserListAdapter
 import com.vdotok.one2many.adapter.OnInboxItemClickCallbackListener
@@ -24,14 +30,12 @@ import com.vdotok.one2many.databinding.FragmentUserListBinding
 import com.vdotok.one2many.dialogs.CreateGroupDialog
 import com.vdotok.one2many.extensions.*
 import com.vdotok.one2many.prefs.Prefs
+import com.vdotok.one2many.ui.dashboard.AllUserViewModel
 import com.vdotok.one2many.utils.ApplicationConstants.API_ERROR
 import com.vdotok.one2many.utils.ViewUtils.setStatusBarGradient
-import com.vdotok.network.network.Result
-import com.vdotok.one2many.ui.dashboard.AllUserViewModel
 import com.vdotok.one2many.utils.isInternetAvailable
-import com.vdotok.network.network.HttpResponseCodes
-import com.vdotok.network.network.NetworkConnectivity
 import retrofit2.HttpException
+
 /**
  * Created By: VdoTok
  * Date & Time: On 6/17/21 At 1:29 PM in 2021
@@ -45,12 +49,13 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
     lateinit var adapter: AllUserListAdapter
     var edtSearch = ObservableField<String>()
 
-    var screenSharingApp :Boolean = false
-    var screenSharingMic :Boolean = false
-    var cameraCall :Boolean = false
-    var isVideo :Boolean = true
-    var isInternalAudioIncluded :Boolean = false
-    private val viewModel : AllUserViewModel by viewModels()
+    var screenSharingApp: Boolean = false
+    var screenSharingMic: Boolean = false
+    var cameraCall: Boolean = false
+    var multiSession: Boolean = false
+    var isVideo: Boolean = true
+    var isInternalAudioIncluded: Boolean = false
+    private val viewModel: AllUserViewModel by viewModels()
 
 
     override fun onCreateView(
@@ -59,21 +64,23 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
         savedInstanceState: Bundle?
     ): View {
         // Inflate the layout for this fragment
-        binding =  FragmentUserListBinding.inflate(inflater, container, false)
+        binding = FragmentUserListBinding.inflate(inflater, container, false)
 
         setStatusBarGradient(this.requireActivity(), R.drawable.rectangle_white_bg)
         init()
         return binding.root
     }
+
     /**
      * Function for setOnClickListeners
      * */
     private fun init() {
         prefs = Prefs(context)
-        screenSharingApp = arguments?.getBoolean("screenApp")?: false
-        screenSharingMic = arguments?.getBoolean("screenMic")?: false
-        cameraCall = arguments?.getBoolean("video")?: false
-        isInternalAudioIncluded = arguments?.getBoolean("internalAudio")?: false
+        screenSharingApp = arguments?.getBoolean("screenApp") ?: false
+        screenSharingMic = arguments?.getBoolean("screenMic") ?: false
+        cameraCall = arguments?.getBoolean("video") ?: false
+        isInternalAudioIncluded = arguments?.getBoolean("internalAudio") ?: false
+        multiSession = arguments?.getBoolean("multiSelect") ?: false
 
         initUserListAdapter()
 
@@ -101,6 +108,7 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
         getAllUsers()
         addPullToRefresh()
     }
+
     /**
      * Function for refreshing the updated users list
      * */
@@ -111,7 +119,7 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
     }
 
     private fun initUserListAdapter() {
-        adapter = AllUserListAdapter(ArrayList(),this)
+        adapter = AllUserListAdapter(ArrayList(), this)
         binding.rcvUserList.adapter = adapter
     }
 
@@ -121,7 +129,12 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
         if (selectedUsersList.isNotEmpty() && selectedUsersList.size == 1)
             createGroup(getGroupTitle(selectedUsersList))
         else
-            activity?.supportFragmentManager?.let { CreateGroupDialog(this::createGroup).show(it, CreateGroupDialog.TAG) }
+            activity?.supportFragmentManager?.let {
+                CreateGroupDialog(this::createGroup).show(
+                    it,
+                    CreateGroupDialog.TAG
+                )
+            }
     }
 
 
@@ -132,7 +145,7 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
     private fun createGroup(title: String) {
         val selectedUsersList: List<UserModel> = adapter.getSelectedUsers()
 
-        if(selectedUsersList.isNotEmpty()){
+        if (selectedUsersList.isNotEmpty()) {
 
             val model = CreateGroupModel()
             model.groupTitle = title
@@ -162,6 +175,7 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
         }
         return title
     }
+
     /**
      * Function to call api for creating a group on server
      * */
@@ -175,13 +189,14 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
                     Result.Loading -> {
                         binding.progressBar.toggleVisibility()
                     }
-                    is Result.Success ->  {
-                        Snackbar.make(binding.root, R.string.group_created, Snackbar.LENGTH_LONG).show()
+                    is Result.Success -> {
+                        Snackbar.make(binding.root, R.string.group_created, Snackbar.LENGTH_LONG)
+                            .show()
                         handleCreateGroupSuccess(it.data)
                     }
                     is Result.Failure -> {
                         binding.progressBar.toggleVisibility()
-                        if(NetworkConnectivity.isNetworkAvailable(activity).not())
+                        if (NetworkConnectivity.isNetworkAvailable(activity).not())
                             binding.root.showSnackBar(getString(R.string.no_internet))
                     }
                 }
@@ -191,13 +206,20 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
 
 
     private fun handleCreateGroupSuccess(response: CreateGroupResponse) {
-        when(response.status) {
+        when (response.status) {
             HttpResponseCodes.SUCCESS.value -> {
                 activity?.hideKeyboard()
                 Handler(Looper.getMainLooper()).postDelayed({
-                    openGroupFragment(screenSharingApp,screenSharingMic,cameraCall,isInternalAudioIncluded)
-                },1000)
-            } else -> {
+                    openGroupFragment(
+                        screenSharingApp,
+                        screenSharingMic,
+                        cameraCall,
+                        isInternalAudioIncluded,
+                        multiSession
+                    )
+                }, 1000)
+            }
+            else -> {
                 binding.root.showSnackBar(response.message)
             }
         }
@@ -215,6 +237,7 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
         }
         return list
     }
+
     /**
      * Function to filter the search
      * */
@@ -235,6 +258,7 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
             }
         })
     }
+
     /**
      * Function to call api for getting all user on server
      * */
@@ -243,43 +267,44 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
 
             prefs.loginInfo?.authToken.let {
 
-                viewModel.getAllUsers(this.requireContext(), "Bearer $it").observe(viewLifecycleOwner, {
-                    try {
-                        when (it) {
-                            is Result.Loading -> {
+                viewModel.getAllUsers(this.requireContext(), "Bearer $it")
+                    .observe(viewLifecycleOwner) {
+                        try {
+                            when (it) {
+                                is Result.Loading -> {
 
-                                binding.swipeRefreshLay.isRefreshing = false
-                                binding.progressBar.toggleVisibility()
+                                    binding.swipeRefreshLay.isRefreshing = false
+                                    binding.progressBar.toggleVisibility()
 
-                            }
-                            is Result.Success -> {
-                                binding.progressBar.toggleVisibility()
+                                }
+                                is Result.Success -> {
+                                    binding.progressBar.toggleVisibility()
 
-                                handleAllUsersResponse(it.data)
+                                    handleAllUsersResponse(it.data)
+                                }
+                                is Result.Failure -> {
+                                    binding.swipeRefreshLay.isRefreshing = false
+                                    binding.progressBar.toggleVisibility()
+                                    Log.e(API_ERROR, it.exception.message ?: "")
+                                    if (isInternetAvailable(activity as Context).not())
+                                        binding.root.showSnackBar(getString(R.string.no_network_available))
+                                    else
+                                        binding.root.showSnackBar(it.exception.message)
+                                }
                             }
-                            is Result.Failure -> {
-                                binding.swipeRefreshLay.isRefreshing = false
-                                binding.progressBar.toggleVisibility()
-                                Log.e(API_ERROR, it.exception.message ?: "")
-                                if (isInternetAvailable(activity as Context).not())
-                                    binding.root.showSnackBar(getString(R.string.no_network_available))
-                                else
-                                    binding.root.showSnackBar(it.exception.message)
-                            }
+
+                        } catch (e: HttpException) {
+                            Log.e(API_ERROR, "AllUserList: ${e.printStackTrace()}")
+                        } catch (e: Throwable) {
+                            Log.e(API_ERROR, "AllUserList: ${e.printStackTrace()}")
                         }
-
-                    } catch (e: HttpException) {
-                        Log.e(API_ERROR, "AllUserList: ${e.printStackTrace()}")
-                    } catch (e: Throwable) {
-                        Log.e(API_ERROR, "AllUserList: ${e.printStackTrace()}")
                     }
-                })
             }
         }
     }
 
     private fun handleAllUsersResponse(response: GetAllUsersResponseModel) {
-        when(response.status) {
+        when (response.status) {
             HttpResponseCodes.SUCCESS.value -> {
                 response.users.let { usersList ->
                     if (usersList.isEmpty()) {
@@ -294,6 +319,7 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
             }
         }
     }
+
     /**
      * Function to display all users
      * */
@@ -312,15 +338,16 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
 
     override fun searchResult(position: Int) {
         edtSearch.get()?.isNotEmpty()?.let {
-            if (position == 0 && it){
+            if (position == 0 && it) {
                 binding.check.show()
                 binding.rcvUserList.hide()
-            }else{
+            } else {
                 binding.check.hide()
                 binding.rcvUserList.show()
             }
         }
     }
+
     /**
      * Function for the navigation to other fragment
      * */
@@ -328,18 +355,20 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
         screenSharingApp: Boolean,
         screenSharingMic: Boolean,
         cameraCall: Boolean,
-        isInternalAudioIncluded: Boolean
+        isInternalAudioIncluded: Boolean,
+        isMultiSession: Boolean,
     ) {
         val bundle = Bundle()
-        bundle.putBoolean("screenApp",screenSharingApp)
-        bundle.putBoolean("screenMic",screenSharingMic)
-        bundle.putBoolean("video",cameraCall)
-        bundle.putBoolean("internalAudio",isInternalAudioIncluded)
-        Navigation.findNavController(binding.root).navigate(R.id.action_open_groupList,bundle)
+        bundle.putBoolean("screenApp", screenSharingApp)
+        bundle.putBoolean("screenMic", screenSharingMic)
+        bundle.putBoolean("video", cameraCall)
+        bundle.putBoolean("internalAudio", isInternalAudioIncluded)
+        bundle.putBoolean("multiSelect", isMultiSession)
+        Navigation.findNavController(binding.root).navigate(R.id.action_open_groupList, bundle)
     }
 
 
-    companion object{
+    companion object {
 
         fun createAllUsersActivity(context: Context) = Intent(context, UserListFragment::class.java)
 

@@ -51,7 +51,7 @@ import org.webrtc.VideoTrack
  */
 class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     private lateinit var binding: ActivityDashBoardBinding
-    private lateinit var navController: NavController
+    lateinit var navController: NavController
     var localStreamScreen: VideoTrack? = null
     var localStreamVideo: VideoTrack? = null
     var enableButton = false
@@ -79,6 +79,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     var isMultiSession = false
     var isMulti = false
     var handler: Handler? = null
+    var publicSessionUrl: String? = null
 
     val mLiveDataEndCall: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>()
@@ -247,6 +248,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     private fun initCallObserver() {
         mLiveDataEndCall.observe(this) {
             if (it) {
+                Log.e("TestNav", "initCallObserver: inside observer!")
                 callParams1 = null
                 callParams2 = null
                 sessionId = null
@@ -333,6 +335,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     override fun onPublicURL(publicURL: String) {
         mListener?.onPublicURL(publicURL)
+        publicSessionUrl = publicURL
     }
 
     override fun connectionStatus(enumConnectionStatus: EnumConnectionStatus) {
@@ -449,7 +452,8 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
         Log.d(
             "incomingCall",
-            " incomingCall callParam : " + callParams1?.sessionUuid.toString() + "-- callParams2" + callParams2?.sessionUuid.toString()
+            " incomingCall callParam : " + callParams1?.sessionUuid.toString()
+                    + "-- callParams2" + callParams2?.sessionUuid.toString()
         )
     }
 

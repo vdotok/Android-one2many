@@ -241,6 +241,10 @@ class PublicCallFragment : CallMangerListenerFragment() {
 
         binding.root.setTag("1")
 
+        (activity as DashBoardActivity).publicSessionUrl?.let {
+            setPublicUrlValue(it)
+        }
+
     }
 
     private fun initiateCallViews() {
@@ -378,6 +382,13 @@ class PublicCallFragment : CallMangerListenerFragment() {
         Navigation.findNavController(binding.root).navigate(R.id.action_open_dial_fragment, bundle)
     }
 
+    private fun setPublicUrlValue(publicURL: String) {
+        activity?.runOnUiThread {
+            if (publicURL.isNotEmpty()) binding.copyURL.show()
+        }
+        url = publicURL
+    }
+
     override fun onRemoteStreamReceived(stream: VideoTrack, refId: String, sessionID: String, isCameraStream: Boolean) {
 
     }
@@ -423,10 +434,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
     }
 
     override fun onPublicURL(publicURL: String) {
-        activity?.runOnUiThread {
-            if (publicURL.isNotEmpty()) binding.copyURL.show()
-        }
-        url = publicURL
+        setPublicUrlValue(publicURL)
     }
 
     override fun checkCallType() {

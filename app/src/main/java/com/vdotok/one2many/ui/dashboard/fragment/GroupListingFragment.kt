@@ -342,14 +342,12 @@ class GroupListingFragment : CallMangerListenerFragment(),
      * @param groupId groupId object we will be sending to the server to delete group on its basis
      * */
     private fun dialogdeleteGroup(groupId: Int) {
-        showDeleteGroupAlert(this.activity, object : DialogInterface.OnClickListener {
-            override fun onClick(dialog: DialogInterface?, which: Int) {
-                val model = DeleteGroupModel()
-                model.groupId = groupId
-                deleteGroup(model)
-
-            }
-        })
+        showDeleteGroupAlert(this.activity
+        ) { dialog, which ->
+            val model = DeleteGroupModel()
+            model.groupId = groupId
+            deleteGroup(model)
+        }
     }
 
     /**
@@ -366,13 +364,9 @@ class GroupListingFragment : CallMangerListenerFragment(),
                     is Result.Success -> {
                         if (it.data.status == ApplicationConstants.SUCCESS_CODE) {
                             getAllGroups()
-                            binding.root.showSnackBar(getString(R.string.group_deleted))
-                        } else {
-                            binding.root.showSnackBar(it.data.message)
                         }
                         binding.progressBar.toggleVisibility()
-                        binding.root.showSnackBar(getString(R.string.group_deleted))
-                        getAllGroups()
+                        binding.root.showSnackBar(it.data.message)
                     }
                     is Result.Failure -> {
                         binding.progressBar.toggleVisibility()

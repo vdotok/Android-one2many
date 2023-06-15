@@ -6,8 +6,11 @@ import android.os.Looper
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.ProcessLifecycleOwner
+import com.vdotok.network.utils.Constants.BASE_URL
+import com.vdotok.one2many.extensions.show
 import com.vdotok.network.models.LoginResponse
 import com.vdotok.one2many.prefs.Prefs
+import com.vdotok.one2many.utils.ApplicationConstants.SDK_PROJECT_ID
 import com.vdotok.streaming.CallClient
 import com.vdotok.streaming.enums.MediaType
 import com.vdotok.streaming.enums.SessionType
@@ -84,6 +87,22 @@ class VdoTok : Application() {
         }
     }
 
+   override fun onCreate() {
+       super.onCreate()
+       vdotok = this
+       callClient = CallClient.getInstance(this)!!
+       prefs = Prefs(this)
+       ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleEventObserver)
+       setVariables()
+   }
+
+
+    private fun setVariables() {
+        if (!prefs.userProjectId.isNullOrEmpty() && !prefs.userBaseUrl.isNullOrEmpty()) {
+            BASE_URL = prefs.userBaseUrl.toString()
+            SDK_PROJECT_ID = prefs.userProjectId.toString()
+        }
+    }
     private fun connectClient() {
         if (!callClient.isConnected()) {
             Handler(Looper.getMainLooper()).postDelayed({
@@ -100,14 +119,6 @@ class VdoTok : Application() {
 
     private fun getMediaServerAddress(mediaServer: LoginResponse.MediaServerMap): String {
         return "https://${mediaServer.host}:${mediaServer.port}"
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        vdotok = this
-        callClient = CallClient.getInstance(this)!!
-        prefs = Prefs(this)
-        ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleEventObserver)
     }
 
     companion object {

@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
@@ -37,7 +38,6 @@ import org.webrtc.VideoTrack
 
 
 class MultiSelectionFragment : CallMangerListenerFragment() {
-
     private lateinit var binding: FragmentMultiSelectionBinding
     private lateinit var callClient: CallClient
     private lateinit var prefs: Prefs
@@ -80,13 +80,13 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
         activity?.runOnUiThread {
             val bundle = Bundle()
             bundle.putParcelableArrayList("grouplist", groupList)
-            bundle.putString("userName", model.customDataPacket?.toString())
+            bundle.putString("userName", model.customDataPacket)
             bundle.putParcelable(AcceptCallModel.TAG, model)
             bundle.putBoolean("isIncoming", true)
             bundle.putBoolean(DialCallFragment.IS_VIDEO_CALL, model.mediaType == MediaType.VIDEO)
             try {
                 Navigation.findNavController(binding.root)
-                    .navigate(R.id.action_open_dial_fragment, bundle)
+                    .navigate(R.id.action_open_ringing_fragment, bundle)
             } catch (ex: Exception) {
                 Log.e("Navigation Error!", "onIncomingCall: ${ex.printStackTrace()}")
             }
@@ -188,7 +188,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
 
     override fun onResume() {
         super.onResume()
-        if (callClient.isConnected() == true) {
+        if (callClient.isConnected()) {
             binding.tvLed.setImageResource(R.drawable.led_connected)
         } else {
             binding.tvLed.setImageResource(R.drawable.led_error)

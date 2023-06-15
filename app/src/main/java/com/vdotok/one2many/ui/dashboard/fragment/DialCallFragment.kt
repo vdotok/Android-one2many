@@ -14,6 +14,11 @@ import android.widget.Toast
 import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
 import com.vdotok.network.models.GroupModel
+import com.vdotok.streaming.CallClient
+import com.vdotok.streaming.enums.MediaType
+import com.vdotok.streaming.enums.SessionType
+import com.vdotok.streaming.models.CallParams
+import com.vdotok.streaming.models.SessionStateInfo
 import com.vdotok.one2many.R
 import com.vdotok.one2many.databinding.FragmentDialCallBinding
 import com.vdotok.one2many.extensions.hide
@@ -24,11 +29,6 @@ import com.vdotok.one2many.models.AcceptCallModel
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.performSingleClick
-import com.vdotok.streaming.CallClient
-import com.vdotok.streaming.enums.MediaType
-import com.vdotok.streaming.enums.SessionType
-import com.vdotok.streaming.models.CallParams
-import com.vdotok.streaming.models.SessionStateInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers

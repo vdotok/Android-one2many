@@ -111,8 +111,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
 
     fun initCallClient() {
-
-        CallClient.getInstance(this)?.setConstants(ApplicationConstants.SDK_PROJECT_ID)
+        CallClient.getInstance(this)?.setConstants(prefs.userProjectId.toString())
         CallClient.getInstance(this)?.let {
             callClient = it
             callClient.setListener(this)
@@ -394,7 +393,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     override fun audioVideoState(sessionStateInfo: SessionStateInfo) {
-
         runOnUiThread {
             mListener?.onCameraAudioOff(sessionStateInfo, isMulti)
         }
@@ -542,13 +540,13 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             callParams.requestId
         )
         callParams2 = callParams.copy()
-
         callParams1?.mediaType = MediaType.VIDEO
         callParams2?.mediaType = MediaType.VIDEO
         callParams1?.sessionType = SessionType.CALL
         callParams2?.sessionType = SessionType.SCREEN
         (application as VdoTok).callParam1 = callParams1
         (application as VdoTok).callParam2 = callParams2
+
         callClient.startMultiSessionV2(callParams, mediaProjection, isGroupSession)
 
     }
@@ -713,7 +711,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
         when (registerResponse.registrationStatus) {
             RegistrationStatus.REGISTER_SUCCESS -> {
-
                 val userModel: LoginResponse? = prefs.loginInfo
                 userModel?.mcToken = registerResponse.mcToken.toString()
                 runOnUiThread {
@@ -895,6 +892,8 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     override fun sessionReconnecting(sessionID: String) {
+        Log.e("remotestream",sessionID)
+        mListener?.clearView(sessionID)
     }
 
     fun logout() {

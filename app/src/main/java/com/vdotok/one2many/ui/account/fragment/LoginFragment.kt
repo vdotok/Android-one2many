@@ -1,6 +1,7 @@
 package com.vdotok.one2many.ui.account.fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,16 +9,19 @@ import androidx.databinding.ObservableField
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
+import com.google.gson.Gson
+import com.google.zxing.integration.android.IntentIntegrator
 import com.vdotok.one2many.R
 import com.vdotok.network.network.Result
+import com.vdotok.network.utils.Constants.BASE_URL
+import com.vdotok.one2many.QrCodeScannerContract
 import com.vdotok.one2many.databinding.LayoutFragmentLoginBinding
 import com.vdotok.one2many.extensions.*
+import com.vdotok.one2many.models.QRCodeModel
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.account.viewmodel.AccountViewModel
-import com.vdotok.one2many.utils.disable
-import com.vdotok.one2many.utils.enable
-import com.vdotok.one2many.utils.handleLoginResponse
-import com.vdotok.one2many.utils.isInternetAvailable
+import com.vdotok.one2many.utils.*
+import com.vdotok.one2many.utils.ApplicationConstants.SDK_PROJECT_ID
 
 
 /**
@@ -56,6 +60,12 @@ class LoginFragment: Fragment() {
 
         prefs = Prefs(activity)
 
+        binding.scanner.performSingleClick{
+            activity?.runOnUiThread {
+                qrCodeScannerLauncher.launch(IntentIntegrator.forSupportFragment(this))
+            }
+        }
+
         binding.SignInButton.setOnClickListener {  validateAndLogin()}
 
         binding.SignUpButton.setOnClickListener {
@@ -71,8 +81,8 @@ class LoginFragment: Fragment() {
      * */
     private fun loginUser(email: String, password: String) {
         activity?.let { it ->
-
-            viewModel.loginUser(email, password).observe(viewLifecycleOwner) {
+            if (!prefs.userProjectId.isNullOrEmpty() && !prefs.userBaseUrl.isNullOrEmpty()){
+                viewModel.loginUser(email, password, projectId = prefs.userProjectId.toString()).observe(viewLifecycleOwner) {
                 when (it) {
                     Result.Loading -> {
                         binding.progressBar.toggleVisibility()
@@ -92,6 +102,9 @@ class LoginFragment: Fragment() {
                     }
                 }
             }
+            }else{
+                binding.root.showSnackBar("Kindly scan QR code to setup project")
+            }
 
         }
     }
@@ -100,6 +113,22 @@ class LoginFragment: Fragment() {
         val view = binding.SignInButton
         if (view.checkedPassword(password.get().toString()) && view.checkedEmail(email.get().toString(), true)) {
             loginAction()
+        }
+    }
+
+    private val qrCodeScannerLauncher = registerForActivityResult(QrCodeScannerContract()){
+        if (!it.contents.isNullOrEmpty()){
+            Log.e("RESULT_INTENT", it.contents)
+            val data: QRCodeModel? = Gson().fromJson(it.contents, QRCodeModel::class.java)
+            prefs.userProjectId = data?.project_id.toString().trim()
+            prefs.userBaseUrl = data?.tenant_api_url.toString().trim()
+            if (!prefs.userProjectId.isNullOrEmpty() &&   !prefs.userBaseUrl.isNullOrEmpty()){
+                SDK_PROJECT_ID = prefs.userProjectId.toString().trim()
+                BASE_URL =  prefs.userBaseUrl.toString().trim()
+            }
+            Log.d("RESULT_INTENT",data.toString())
+        }else{
+            binding.root.showSnackBar("QR CODE is not correct!!!")
         }
     }
 

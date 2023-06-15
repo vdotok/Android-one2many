@@ -324,7 +324,9 @@ class UserListFragment : Fragment(), OnInboxItemClickCallbackListener {
      * Function to display all users
      * */
     private fun populateDataToList(response: GetAllUsersResponseModel) {
-        adapter.updateData(response.users)
+        val list = response.users as ArrayList<UserModel>
+        list.removeIf { it.refID == prefs.loginInfo?.refId }
+        adapter.updateData(list)
     }
 
     /**

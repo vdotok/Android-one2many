@@ -7,6 +7,8 @@ import com.google.gson.Gson
 import com.vdotok.network.models.AuthenticationResponse
 import com.vdotok.network.models.LoginResponse
 import com.vdotok.one2many.utils.ApplicationConstants.LOGIN_INFO
+import com.vdotok.one2many.utils.ApplicationConstants.USER_BASE
+import com.vdotok.one2many.utils.ApplicationConstants.USER_PROJECT
 import com.vdotok.one2many.utils.ApplicationConstants.SDK_AUTH_RESPONSE
 
 /**
@@ -18,6 +20,27 @@ import com.vdotok.one2many.utils.ApplicationConstants.SDK_AUTH_RESPONSE
  */
 class Prefs(context: Context?) {
     private val mPrefs: SharedPreferences = context?.getSharedPreferences("countPref", Context.MODE_PRIVATE)!!
+    var userProjectId: String?
+        get(){
+            return mPrefs.getString(USER_PROJECT, "")
+        }
+        set(userInfo) {
+            val mEditor: SharedPreferences.Editor = mPrefs.edit()
+            mEditor.putString(USER_PROJECT, userInfo)
+            mEditor.apply()
+        }
+
+    var userBaseUrl: String?
+        get(){
+            return mPrefs.getString(USER_BASE, "")
+        }
+        set(userInfo) {
+            val mEditor: SharedPreferences.Editor = mPrefs.edit()
+            mEditor.putString(USER_BASE, userInfo)
+            mEditor.apply()
+        }
+
+
     var loginInfo: LoginResponse?
         get(){
             val gson = Gson()

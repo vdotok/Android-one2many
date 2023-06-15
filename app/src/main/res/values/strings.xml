@@ -39,7 +39,7 @@
     <string name="group_name_empty">Group name cannot be empty!</string>
     <string name="blank" />
     <string name="in_progress">In progress!</string>
-    <string name="sign_up_to_your_account">Sign Up to your account</string>
+    <string name="sign_up_to_your_account">Sign Up</string>
     <string name="no_groups_yet">No Groups Yet</string>
     <string name="no_conversation_detail">Tap and hold on any message\nto star it, so you can easily find\nit later.</string>
     <string name="btn_log_out">Log Out as %s</string>

@@ -70,8 +70,8 @@ class SignUpFragment: Fragment() {
                 it.checkedEmail(email.get().toString(), true) &&
                 it.checkedPassword(password.get().toString())
             ) {
-                checkUserEmail(email.get().toString())
                 binding.SignUpButton.disable()
+                checkUserEmail(email.get().toString())
             }
         }
 
@@ -112,13 +112,14 @@ class SignUpFragment: Fragment() {
                                 binding.root.showSnackBar(getString(R.string.no_network_available))
                             else
                                 binding.root.showSnackBar(it.exception.message)
-                            binding.SignInButton.enable()
+                            binding.SignUpButton.enable()
                         }
                     }
 
                 }
             } else {
-                binding.root.showSnackBar("Kindly scan QR code to setup project")
+                binding.root.showSnackBar(getString(R.string.api_url_empty))
+                binding.SignUpButton.enable()
             }
         }
     }
@@ -163,9 +164,11 @@ class SignUpFragment: Fragment() {
                             binding.root.showSnackBar(it.exception.message)
                     }
                 }
+                binding.SignUpButton.enable()
             }
         } else {
-            binding.root.showSnackBar("Kindly scan QR code to setup project")
+            binding.root.showSnackBar(getString(R.string.api_url_empty))
+            binding.SignUpButton.enable()
         }
     }
 

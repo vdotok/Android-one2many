@@ -204,29 +204,39 @@
                 android:src="@drawable/ic_speaker_on"
                 app:layout_constraintTop_toBottomOf="@id/ivCamSwitch"
                 app:layout_constraintEnd_toEndOf="parent" />
-            <TextView
-                android:id="@+id/tvcount"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:padding="5dp"
-                tools:text="5"
-                android:textColor="@color/tile_green_dark"
-                android:textSize="14sp"
-                app:layout_constraintTop_toBottomOf="@+id/ivSpeaker"
-                app:layout_constraintEnd_toEndOf="parent" />
 
-            <ImageView
-                android:id="@+id/ivCountUser"
+            <FrameLayout
+                android:id="@+id/linearParticipantCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:clickable="true"
-                android:focusable="true"
                 android:layout_marginTop="10dp"
-                android:src="@drawable/ic_count_icon"
-                app:layout_constraintTop_toBottomOf="@id/ivSpeaker"
-                app:layout_constraintStart_toStartOf="@id/tvTime"
-                app:layout_constraintEnd_toEndOf="@id/tvTime" />
+                android:orientation="horizontal"
+                android:layout_marginEnd="10dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/ivSpeaker">
+
+                <ImageView
+                    android:id="@+id/ivCountUser"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:src="@drawable/ic_count_icon" />
+
+                <TextView
+                    android:id="@+id/tvcount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_marginStart="25dp"
+                    android:textColor="@color/tile_green_dark"
+                    android:textSize="12sp"
+                    tools:text="10" />
+
+            </FrameLayout>
+
 
 
         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="username"
             type="androidx.databinding.ObservableField&lt;String&gt;" />
@@ -16,206 +17,213 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:keepScreenOn="true"
-        android:background="@color/light_grey1">
+        android:background="@color/light_grey1"
+        android:keepScreenOn="true">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/light_grey1">
-
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@id/tvUserName"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <TextView
-            android:id="@+id/tv_screen"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:textColor="@color/white"
-            android:text="@string/broad_casting_screen_sharing"
-            android:background="@color/grayish_1"
-            android:gravity="center"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-
-        <com.vdotok.one2many.CustomCallView
-            android:id="@+id/remoteView"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:keepScreenOn="true"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:avatar="@drawable/ic_user_icon"
-            />
+            android:background="@color/light_grey1">
 
 
-        <View
-            android:layout_height="0dp"
-            android:layout_width="match_parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:background="@drawable/ic_top_bar_call"
-            app:layout_constraintBottom_toBottomOf="@id/tvTime" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvUserName" />
+
+            <TextView
+                android:id="@+id/tv_screen"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="@color/grayish_1"
+                android:gravity="center"
+                android:text="@string/broad_casting_screen_sharing"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
 
-        <TextView
-            android:id="@+id/tvCallType"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            tools:text="copy url"
-            android:textColor="@color/tile_green_dark"
-            android:textSize="14sp"
-            android:visibility="gone"
-            app:layout_constraintTop_toTopOf="@id/tvUserName"
-            app:layout_constraintBottom_toBottomOf="@+id/tvUserName"
-            app:layout_constraintEnd_toEndOf="parent"  />
+            <com.vdotok.one2many.CustomCallView
+                android:id="@+id/remoteView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:keepScreenOn="true"
+                app:avatar="@drawable/ic_user_icon"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tvUserName"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            style="@style/Text_Call_Name"
-            android:layout_marginTop="20dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:text="@string/public_broadcast"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:background="@drawable/ic_top_bar_call"
+                app:layout_constraintBottom_toBottomOf="@id/tvTime"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tvTime"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_marginTop="15dp"
-            android:layout_weight="1"
-            android:padding="5dp"
-            tools:text="5:00"
-            android:textColor="@color/black2"
-            android:textSize="14sp"
-            app:layout_constraintTop_toBottomOf="@+id/tvCallType"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-
-        <LinearLayout
-            android:id="@+id/bottomBar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-            <ImageView
-                android:id="@+id/imgscreenn"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+            <TextView
+                android:id="@+id/tvCallType"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:layout_marginStart="10dp"
                 android:layout_marginEnd="10dp"
-                android:src="@drawable/screen_sharing_icon" />
+                android:textColor="@color/tile_green_dark"
+                android:textSize="14sp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/tvUserName"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tvUserName"
+                tools:text="copy url" />
 
-            <ImageView
-                android:id="@+id/imgCamera"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+            <TextView
+                android:id="@+id/tvUserName"
+                style="@style/Text_Call_Name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="20dp"
                 android:layout_marginEnd="10dp"
-                android:src="@drawable/ic_video_off" />
+                android:text="@string/public_broadcast"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
-                android:id="@+id/imgCallOff"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:clickable="@{sessionEnable? true : false, default = false}"
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="15dp"
                 android:layout_marginEnd="10dp"
-                android:src="@{sessionEnable?@drawable/ic_end_call:@drawable/ic_end_call_disable,default =@drawable/ic_end_call_disable}" />
+                android:layout_weight="1"
+                android:padding="5dp"
+                android:textColor="@color/black2"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvCallType"
+                tools:text="5:00" />
 
+
+            <LinearLayout
+                android:id="@+id/bottomBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <ImageView
+                    android:id="@+id/imgscreenn"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/screen_sharing_icon" />
+
+                <ImageView
+                    android:id="@+id/imgCamera"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_video_off" />
+
+                <ImageView
+                    android:id="@+id/imgCallOff"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="10dp"
+                    android:clickable="@{sessionEnable? true : false, default = false}"
+                    android:src="@{sessionEnable?@drawable/ic_end_call:@drawable/ic_end_call_disable,default =@drawable/ic_end_call_disable}" />
+
+
+                <ImageView
+                    android:id="@+id/imgMute"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="10dp"
+                    android:src="@drawable/ic_unmute_mic" />
+
+                <ImageView
+                    android:id="@+id/internal_audio"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="30dp"
+                    android:src="@drawable/ic_internal_audio_icon" />
+            </LinearLayout>
 
             <ImageView
-                android:id="@+id/imgMute"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:id="@+id/ivCamSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:src="@drawable/ic_cam_switch"
+                app:layout_constraintEnd_toEndOf="@id/tvTime"
+                app:layout_constraintStart_toStartOf="@id/tvTime"
+                app:layout_constraintTop_toBottomOf="@id/tvTime" />
+
+            <FrameLayout
+                android:id="@+id/linearParticipantCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal"
                 android:layout_marginEnd="10dp"
-                android:layout_gravity="center_vertical"
-                android:src="@drawable/ic_unmute_mic" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/ivCamSwitch">
+
+                <ImageView
+                    android:id="@+id/ivCountUser"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginEnd="6dp"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:src="@drawable/ic_count_icon" />
+
+                <TextView
+                    android:id="@+id/tvcount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_marginStart="25dp"
+                    android:textColor="@color/tile_green_dark"
+                    android:textSize="12sp"
+                    tools:text="10" />
+
+            </FrameLayout>
+
             <ImageView
-                android:id="@+id/internal_audio"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_gravity="center_vertical"
-                android:layout_marginEnd="30dp"
-                android:src="@drawable/ic_internal_audio_icon" />
-        </LinearLayout>
-        <ImageView
-            android:id="@+id/ivCamSwitch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:src="@drawable/ic_cam_switch"
-            app:layout_constraintTop_toBottomOf="@id/tvTime"
-            app:layout_constraintStart_toStartOf="@id/tvTime"
-            app:layout_constraintEnd_toEndOf="@id/tvTime" />
+                android:id="@+id/copyURL"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:clickable="true"
+                android:elevation="10dp"
+                android:focusable="true"
+                android:padding="10dp"
+                android:src="@drawable/ic_copy_url"
+                android:visibility="visible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/linearParticipantCount" />
 
-        <TextView
-            android:id="@+id/tvcount"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:padding="5dp"
-            tools:text="5"
-            android:textColor="@color/tile_green_dark"
-            android:textSize="14sp"
-            app:layout_constraintTop_toBottomOf="@+id/ivCamSwitch"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <ImageView
-            android:id="@+id/ivCountUser"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginTop="10dp"
-            android:src="@drawable/ic_count_icon"
-            app:layout_constraintTop_toBottomOf="@id/ivCamSwitch"
-            app:layout_constraintStart_toStartOf="@id/tvTime"
-            app:layout_constraintEnd_toEndOf="@id/tvTime" />
-
-        <ImageView
-            android:id="@+id/copyURL"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="true"
-            android:elevation="10dp"
-            android:focusable="true"
-            android:padding="10dp"
-            android:layout_marginTop="10dp"
-            android:visibility="gone"
-            android:src="@drawable/ic_copy_url"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/ivCountUser" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </FrameLayout>
 </layout>

@@ -94,7 +94,7 @@ class SignUpFragment: Fragment() {
      * */
     private fun checkUserEmail(email: String) {
         activity?.let {
-            if (!prefs.userProjectId.isNullOrEmpty() && !prefs.userBaseUrl.isNullOrEmpty()) {
+            if (SDK_PROJECT_ID.isNotEmpty() && Constants.BASE_URL.isNotEmpty()) {
                 viewModel.checkEmailAlreadyExist(email).observe(viewLifecycleOwner) {
 
                     when (it) {
@@ -141,11 +141,11 @@ class SignUpFragment: Fragment() {
 
     private fun signUp() {
         binding.SignUpButton.disable()
-        if (!prefs.userProjectId.isNullOrEmpty() && !prefs.userBaseUrl.isNullOrEmpty()) {
+        if (SDK_PROJECT_ID.isNotEmpty() && Constants.BASE_URL.isNotEmpty()) {
             viewModel.signUp(
                 SignUpModel(
                     fullName.get().toString(), email.get().toString(),
-                    password.get().toString(), project_id = prefs.userProjectId.toString()
+                    password.get().toString(), project_id = SDK_PROJECT_ID
                 )
             ).observe(viewLifecycleOwner) {
                 when (it) {

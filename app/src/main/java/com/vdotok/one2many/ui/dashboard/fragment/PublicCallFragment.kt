@@ -136,7 +136,8 @@ class PublicCallFragment : CallMangerListenerFragment() {
             stopTimer()
             (activity as DashBoardActivity).endCall()
             binding.remoteView.release()
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+//            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            Navigation.findNavController(binding.root).navigateUp()
         }
 
         binding.copyURL.setOnClickListener {
@@ -421,7 +422,8 @@ class PublicCallFragment : CallMangerListenerFragment() {
         try {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            Navigation.findNavController(binding.root).navigateUp()
+//            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         } catch (e: Exception) {}
     }
 
@@ -429,7 +431,8 @@ class PublicCallFragment : CallMangerListenerFragment() {
         try {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            Navigation.findNavController(binding.root).navigateUp()
+//            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         } catch (e: Exception) {}
     }
 

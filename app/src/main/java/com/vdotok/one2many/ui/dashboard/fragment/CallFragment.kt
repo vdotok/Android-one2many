@@ -24,6 +24,7 @@ import com.vdotok.streaming.models.CallParams
 import com.vdotok.streaming.models.SessionStateInfo
 import com.vdotok.one2many.R
 import com.vdotok.one2many.VdoTok
+import com.vdotok.one2many.VdoTok.Companion.getVdotok
 import com.vdotok.one2many.databinding.LayoutFragmentCallBinding
 import com.vdotok.one2many.extensions.hide
 import com.vdotok.one2many.extensions.show
@@ -33,8 +34,6 @@ import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.TimeUtils.getTimeFromSeconds
 import com.vdotok.one2many.utils.performSingleClick
-import com.vdotok.streaming.enums.SessionType
-import com.vdotok.streaming.views.CallViewRenderer
 import kotlinx.android.synthetic.main.layout_fragment_call.*
 import org.webrtc.EglBase
 import org.webrtc.VideoTrack
@@ -89,6 +88,7 @@ class CallFragment : CallMangerListenerFragment() {
     var loop = 0
     var swap = false
     var isCamSwitch = false
+    var isInitiator = false
 
     private lateinit var screenRemoteViewReference: CustomCallView
     private lateinit var videoRemoteViewReference:  CustomCallView
@@ -112,9 +112,10 @@ class CallFragment : CallMangerListenerFragment() {
      * Function for setOnClickListeners and receiving data from outgoing and incoming call dial
      * */
     private fun init() {
-       prefs = Prefs(this.requireContext())
-       screenRemoteViewReference = binding.localView
-       videoRemoteViewReference = binding.remoteView
+        prefs = Prefs(this.requireContext())
+        initiateCallViews()
+        screenRemoteViewReference = binding.localView
+        videoRemoteViewReference = binding.remoteView
 
         binding.username = userName
         (activity as DashBoardActivity).mListener = this
@@ -126,6 +127,8 @@ class CallFragment : CallMangerListenerFragment() {
         isVideoCameraCall = arguments?.getBoolean(DialCallFragment.IS_VIDEO_CALL) ?: false
         isScreenSharingCall = arguments?.getBoolean(DialCallFragment.IS_VIDEO_CALL)?: false
         arguments?.get(GroupModel.TAG)?.let {
+//            this is for initiator
+            isInitiator = true
             groupModel = it as GroupModel?
             isIncomingCall = arguments?.get("isIncoming") as Boolean
             getUserName(groupModel!!,isVideoCameraCall)
@@ -135,6 +138,8 @@ class CallFragment : CallMangerListenerFragment() {
             participantsCount = arguments?.getInt("participantsCount")!!
             isInternalAudioIncluded = arguments?.getBoolean("internalAudio")?: false
         } ?: kotlin.run {
+//            this is for receiver
+            isInitiator = false
             groupList = arguments?.getParcelableArrayList<GroupModel>("grouplist") as ArrayList<GroupModel>
             name = (arguments?.get("userName") as CharSequence?).toString()
             callParams = arguments?.getParcelable(AcceptCallModel.TAG) as CallParams?
@@ -148,9 +153,11 @@ class CallFragment : CallMangerListenerFragment() {
         binding.imgCallOff.performSingleClick {
             stopTimer()
             (activity as DashBoardActivity).endCall()
-            binding.remoteView.release()
-            binding.localView.release()
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            releaseCallView()
+            if (!isInitiator)
+                startActivity(Intent.makeRestartActivityTask(activity?.intent?.component))
+            else
+                Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         }
 
 
@@ -172,7 +179,7 @@ class CallFragment : CallMangerListenerFragment() {
         }
 
         binding.ivSpeaker.setOnClickListener {
-           speakerButtonAction()
+            speakerButtonAction()
         }
 
         val callback: OnBackPressedCallback = object : OnBackPressedCallback(true // default to enabled
@@ -229,24 +236,24 @@ class CallFragment : CallMangerListenerFragment() {
         }
 
         if (isIncomingCall) {
-           screenRemoteViewReference.setOnClickListener {
-               activity?.let { activity ->
-                   screenRemoteViewReference.swapViews(activity,screenRemoteViewReference,videoRemoteViewReference)
-                   swap = swap.not()
-               }
-           }
+            screenRemoteViewReference.setOnClickListener {
+                activity?.let { activity ->
+                    screenRemoteViewReference.swapViews(activity,screenRemoteViewReference,videoRemoteViewReference)
+                    swap = swap.not()
+                }
+            }
         } else {
             addTouchEventListener()
         }
         binding.imgscreenn.setOnClickListener {
             if (isScreenSharingCall) {
-                    if (screenSharingMic && cameraCall || screenSharingApp && cameraCall){
-                        binding.localView.showHideAvatar(true)
-                    }else{
-                        binding.remoteView.show()
-                        binding.tvScreen.hide()
-                        binding.remoteView.showHideAvatar(true)
-                    }
+                if (screenSharingMic && cameraCall || screenSharingApp && cameraCall){
+                    binding.localView.showHideAvatar(true)
+                }else{
+                    binding.remoteView.show()
+                    binding.tvScreen.hide()
+                    binding.remoteView.showHideAvatar(true)
+                }
                 (activity as DashBoardActivity).pauseVideo(true)
                 binding.imgscreenn.setImageResource(R.drawable.ic_screensharing_off)
             } else {
@@ -267,6 +274,25 @@ class CallFragment : CallMangerListenerFragment() {
         screenHeight = context?.resources?.displayMetrics?.heightPixels!!
 
         (activity as DashBoardActivity).localStreamVideo?.let { onCameraStreamReceived(it) }
+
+        checkSessionType()
+    }
+
+    private fun checkSessionType() {
+        if ((screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
+            || (screenSharingApp && isInternalAudioIncluded)){
+            Handler(Looper.getMainLooper()).postDelayed({moveToDashboard()}, 1500)
+        }
+    }
+
+    private fun releaseCallView() {
+        binding.remoteView.release()
+        binding.localView.release()
+    }
+
+    private fun initiateCallViews() {
+        getVdotok()?.rootEglBaseContext?.let { binding.localView.initiateCallView(it) }
+        getVdotok()?.rootEglBaseContext?.let { binding.remoteView.initiateCallView(it) }
     }
 
 
@@ -276,7 +302,7 @@ class CallFragment : CallMangerListenerFragment() {
      * @param groupModel groupModel object is to get group details
      * */
     private fun getUserName(groupModel: GroupModel?, videoCall: Boolean) {
-       groupModel?.let { it ->
+        groupModel?.let { it ->
             if (groupModel.autoCreated == 1 && videoCall) {
                 it.participants.forEach { name->
                     if (name.fullname?.equals(prefs.loginInfo?.fullName) == false) {
@@ -294,7 +320,7 @@ class CallFragment : CallMangerListenerFragment() {
                 userName.set(participantNames)
 
             }
-       }
+        }
 
     }
 
@@ -312,71 +338,71 @@ class CallFragment : CallMangerListenerFragment() {
             return
         }
 
-            if (isIncomingCall) {
-                binding.tvCallType.text = getString(R.string.incoming_calling)
-                binding.imgMute.hide()
-                binding.imgscreenn.hide()
-                binding.imgCamera.hide()
-                binding.internalAudio.hide()
-                binding.ivCamSwitch.hide()
+        if (isIncomingCall) {
+            binding.tvCallType.text = getString(R.string.incoming_calling)
+            binding.imgMute.hide()
+            binding.imgscreenn.hide()
+            binding.imgCamera.hide()
+            binding.internalAudio.hide()
+            binding.ivCamSwitch.hide()
+            binding.tvScreen.hide()
+
+        } else {
+            binding.ivSpeaker.hide()
+            if (screenSharingApp && cameraCall) {
+                binding.tvCallType.text = getString(R.string.screen_video_calling)
+                binding.imgscreenn.show()
+                binding.imgCamera.show()
                 binding.tvScreen.hide()
-
-            } else {
-                binding.ivSpeaker.hide()
-                if (screenSharingApp && cameraCall) {
-                    binding.tvCallType.text = getString(R.string.screen_video_calling)
-                    binding.imgscreenn.show()
-                    binding.imgCamera.show()
-                    binding.tvScreen.hide()
-                    binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
-                    if (!isInternalAudioIncluded && screenSharingApp) {
-                        binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_disable)
-                        binding.internalAudio.isEnabled = false
-                    }
-
-                    binding.ivCamSwitch.show()
-                } else if (screenSharingMic && cameraCall) {
-                    binding.tvCallType.text = getString(R.string.screen_video_calling)
-                    binding.imgscreenn.show()
-                    binding.imgCamera.show()
-                    binding.internalAudio.hide()
-                    binding.imgMute.show()
-                    binding.tvScreen.hide()
-                    binding.ivCamSwitch.show()
-                    binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
-                } else if (screenSharingApp) {
-                    binding.tvCallType.text = getString(R.string.screen_calling)
-                    if (!isInternalAudioIncluded && screenSharingApp) {
-                        binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_disable)
-                        binding.internalAudio.isEnabled = false
-                    }
-                    binding.tvScreen.show()
-                    binding.imgCamera.hide()
-                    binding.ivCamSwitch.hide()
-                    binding.imgMute.hide()
-                    binding.localView.hide()
-                    binding.remoteView.hide()
-                } else if (screenSharingMic) {
-                    binding.tvCallType.text = getString(R.string.screen_calling)
-                    if (!isInternalAudioIncluded && screenSharingMic) {
-                        binding.imgMute.show()
-                    }
-                    binding.tvScreen.show()
-                    binding.imgCamera.hide()
-                    binding.ivCamSwitch.hide()
-                    binding.internalAudio.hide()
-                    binding.localView.hide()
-                    binding.remoteView.hide()
-                } else if (cameraCall) {
-                    binding.tvCallType.text = getString(R.string.video_calling)
-                    binding.internalAudio.hide()
-                    binding.imgscreenn.hide()
-                    binding.ivCamSwitch.show()
-                    binding.localView.hide()
-                    binding.tvScreen.hide()
-                    binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
+                binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
+                if (!isInternalAudioIncluded && screenSharingApp) {
+                    binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_disable)
+                    binding.internalAudio.isEnabled = false
                 }
+
+                binding.ivCamSwitch.show()
+            } else if (screenSharingMic && cameraCall) {
+                binding.tvCallType.text = getString(R.string.screen_video_calling)
+                binding.imgscreenn.show()
+                binding.imgCamera.show()
+                binding.internalAudio.hide()
+                binding.imgMute.show()
+                binding.tvScreen.hide()
+                binding.ivCamSwitch.show()
+                binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
+            } else if (screenSharingApp) {
+                binding.tvCallType.text = getString(R.string.screen_calling)
+                if (!isInternalAudioIncluded && screenSharingApp) {
+                    binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_disable)
+                    binding.internalAudio.isEnabled = false
+                }
+                binding.tvScreen.show()
+                binding.imgCamera.hide()
+                binding.ivCamSwitch.hide()
+                binding.imgMute.hide()
+                binding.localView.hide()
+                binding.remoteView.hide()
+            } else if (screenSharingMic) {
+                binding.tvCallType.text = getString(R.string.screen_calling)
+                if (!isInternalAudioIncluded && screenSharingMic) {
+                    binding.imgMute.show()
+                }
+                binding.tvScreen.show()
+                binding.imgCamera.hide()
+                binding.ivCamSwitch.hide()
+                binding.internalAudio.hide()
+                binding.localView.hide()
+                binding.remoteView.hide()
+            } else if (cameraCall) {
+                binding.tvCallType.text = getString(R.string.video_calling)
+                binding.internalAudio.hide()
+                binding.imgscreenn.hide()
+                binding.ivCamSwitch.show()
+                binding.localView.hide()
+                binding.tvScreen.hide()
+                binding.imgCamera.setImageResource(R.drawable.ic_call_video_rounded)
             }
+        }
     }
 
     /**
@@ -437,8 +463,7 @@ class CallFragment : CallMangerListenerFragment() {
 
     override fun onRemoteStreamReceived(stream: VideoTrack, refId: String, sessionID: String, isCameraStream: Boolean) {
         activity?.runOnUiThread {
-            if ((activity as DashBoardActivity).callParams1?.sessionUUID == sessionID) {
-                Log.e("remotestream","isinitializeFullScree")
+            if ((activity as DashBoardActivity).callParams1?.sessionUuid == sessionID) {
                 binding.remoteView.preview.setMirror(false)
                 setUserNameUI(refId)
                 try {
@@ -478,26 +503,27 @@ class CallFragment : CallMangerListenerFragment() {
 
 
     private fun setUserNameUI( refId: String) {
-         userName.set(name)
+        userName.set(name)
     }
 
     override fun onCameraStreamReceived(stream: VideoTrack) {
         val myRunnable = Runnable {
-                try {
-                    binding.localView.hide()
-                    stream.addSink(binding.remoteView.setView())
-                    binding.remoteView.preview.setMirror(true)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+            try {
+                binding.localView.hide()
+                stream.addSink(binding.remoteView.setView())
+                binding.remoteView.preview.setMirror(true)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
 
         }
-            activity?.let { Handler(it.mainLooper) }?.post(myRunnable)
+        activity?.let { Handler(it.mainLooper) }?.post(myRunnable)
     }
     override fun onCameraAudioOff(sessionStateInfo: SessionStateInfo, isMultySession: Boolean) {
         activity?.runOnUiThread {
             Log.d("sessionState", sessionStateInfo.toString())
-            if (!(activity as DashBoardActivity).callParams1?.sessionUUID.isNullOrEmpty() && !(activity as DashBoardActivity).callParams2?.sessionUUID.isNullOrEmpty()) {
+            if (!(activity as DashBoardActivity).callParams1?.sessionUuid.isNullOrEmpty() &&
+                !(activity as DashBoardActivity).callParams2?.sessionUuid.isNullOrEmpty()) {
                 if (sessionStateInfo.isScreenShare == true) {
                     when {
                         sessionStateInfo.videoState == 1 -> {
@@ -554,17 +580,23 @@ class CallFragment : CallMangerListenerFragment() {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
             Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+            Log.e("Navigation Error!", "onCallMissed: ${e.message}")
+        }
     }
 
     override fun onCallEnd() {
         try {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
-            binding.remoteView.release()
-            binding.localView.release()
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
-        } catch (e: Exception) {}
+            releaseCallView()
+            if (!isInitiator)
+                startActivity(Intent.makeRestartActivityTask(activity?.intent?.component))
+            else
+                Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+        } catch (e: Exception) {
+            Log.e("Navigation Error!", "onCallEnd: ${e.message}")
+        }
     }
 
     override fun onPublicURL(publicURL: String) {
@@ -573,7 +605,7 @@ class CallFragment : CallMangerListenerFragment() {
     override fun checkCallType() {
         if ((screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
             || (screenSharingApp && isInternalAudioIncluded)){
-            moveToDashboard()
+            Handler(Looper.getMainLooper()).postDelayed({moveToDashboard()}, 1000)
         }
     }
     private fun moveToDashboard() {

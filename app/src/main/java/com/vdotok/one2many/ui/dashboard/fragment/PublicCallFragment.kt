@@ -1,17 +1,22 @@
-package com.vdotok.one2many.ui.dashboard.fragment
+package com.vdotok.one2many.feature.dashBoard.fragment
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.media.projection.MediaProjection
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.isVisible
+import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
 import com.vdotok.network.models.GroupModel
 import com.vdotok.network.models.Participants
@@ -21,6 +26,7 @@ import com.vdotok.streaming.models.CallParams
 import com.vdotok.streaming.models.SessionStateInfo
 import com.vdotok.one2many.R
 import com.vdotok.one2many.VdoTok
+import com.vdotok.one2many.VdoTok.Companion.getVdotok
 import com.vdotok.one2many.databinding.LayoutFragmentCallPublicBinding
 import com.vdotok.one2many.extensions.hide
 import com.vdotok.one2many.extensions.show
@@ -28,8 +34,12 @@ import com.vdotok.one2many.extensions.showSnackBar
 import com.vdotok.one2many.fragments.CallMangerListenerFragment
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
+import com.vdotok.one2many.ui.dashboard.fragment.CallFragment
+import com.vdotok.one2many.ui.dashboard.fragment.DialCallFragment
+import com.vdotok.one2many.ui.dashboard.fragment.PublicDialCallFragment
 import com.vdotok.one2many.utils.TimeUtils.getTimeFromSeconds
 import com.vdotok.one2many.utils.performSingleClick
+import com.vdotok.streaming.views.CallViewRenderer
 import org.webrtc.EglBase
 import org.webrtc.VideoTrack
 import java.util.*
@@ -98,6 +108,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
     private fun init() {
         prefs = Prefs(this.requireContext())
         videoRemoteViewReference = binding.remoteView
+        initiateCallViews()
 
         binding.tvCallType.text = getString(R.string.your_url)
 
@@ -105,17 +116,17 @@ class PublicCallFragment : CallMangerListenerFragment() {
 
         CallClient.getInstance(activity as Context)?.let {
             callClient = it
-         }
-            isIncomingCall = arguments?.get("isIncoming") as Boolean
-            screenSharingApp = arguments?.getBoolean("screenApp")?: false
-            screenSharingMic = arguments?.getBoolean("screenMic")?: false
-            cameraCall = arguments?.getBoolean("video")?: false
-            isVideoCall = arguments?.getBoolean(PublicDialCallFragment.IS_VIDEO_CALL) ?: false
-            isVideoCall1 = arguments?.getBoolean(PublicDialCallFragment.IS_VIDEO_CALL)?: false
-            isInternalAudioIncluded = arguments?.getBoolean("internalAudio")?: false
-            url = arguments?.getString("url")
-            participantsCount = arguments?.getInt("participantCount")!!
-            multi =  arguments?.getBoolean("multi")?: false
+        }
+        isIncomingCall = arguments?.get("isIncoming") as Boolean
+        screenSharingApp = arguments?.getBoolean("screenApp")?: false
+        screenSharingMic = arguments?.getBoolean("screenMic")?: false
+        cameraCall = arguments?.getBoolean("video")?: false
+        isVideoCall = arguments?.getBoolean(PublicDialCallFragment.IS_VIDEO_CALL) ?: false
+        isVideoCall1 = arguments?.getBoolean(PublicDialCallFragment.IS_VIDEO_CALL)?: false
+        isInternalAudioIncluded = arguments?.getBoolean("internalAudio")?: false
+        url = arguments?.getString("url")
+        participantsCount = arguments?.getInt("participantCount")!!
+        multi =  arguments?.getBoolean("multi")?: false
 
         callClient.setSpeakerEnable(true)
         binding.tvcount.text = participantsCount.toString()
@@ -125,7 +136,8 @@ class PublicCallFragment : CallMangerListenerFragment() {
             stopTimer()
             (activity as DashBoardActivity).endCall()
             binding.remoteView.release()
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+//            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            Navigation.findNavController(binding.root).navigateUp()
         }
 
         binding.copyURL.setOnClickListener {
@@ -205,7 +217,7 @@ class PublicCallFragment : CallMangerListenerFragment() {
 
         binding.imgscreenn.setOnClickListener {
             if (isVideoCall) {
-               if (!cameraCall){
+                if (!cameraCall){
                     binding.remoteView.show()
                     binding.tvScreen.hide()
                     binding.remoteView.showHideAvatar(true)
@@ -230,8 +242,16 @@ class PublicCallFragment : CallMangerListenerFragment() {
 
         binding.root.setTag("1")
 
+        (activity as DashBoardActivity).publicSessionUrl?.let {
+            setPublicUrlValue(it)
+        }
 
     }
+
+    private fun initiateCallViews() {
+        getVdotok()?.rootEglBaseContext?.let { binding.remoteView.initiateCallView(it) }
+    }
+
     override fun onCreated(created: Boolean) {
         activity?.runOnUiThread {
             binding.sessionEnable = created
@@ -363,6 +383,13 @@ class PublicCallFragment : CallMangerListenerFragment() {
         Navigation.findNavController(binding.root).navigate(R.id.action_open_dial_fragment, bundle)
     }
 
+    private fun setPublicUrlValue(publicURL: String) {
+        activity?.runOnUiThread {
+            if (publicURL.isNotEmpty()) binding.copyURL.show()
+        }
+        url = publicURL
+    }
+
     override fun onRemoteStreamReceived(stream: VideoTrack, refId: String, sessionID: String, isCameraStream: Boolean) {
 
     }
@@ -395,7 +422,8 @@ class PublicCallFragment : CallMangerListenerFragment() {
         try {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            Navigation.findNavController(binding.root).navigateUp()
+//            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         } catch (e: Exception) {}
     }
 
@@ -403,15 +431,13 @@ class PublicCallFragment : CallMangerListenerFragment() {
         try {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            Navigation.findNavController(binding.root).navigateUp()
+//            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         } catch (e: Exception) {}
     }
 
     override fun onPublicURL(publicURL: String) {
-        activity?.runOnUiThread {
-            if (publicURL.isNotEmpty()) binding.copyURL.show()
-        }
-        url = publicURL
+        setPublicUrlValue(publicURL)
     }
 
     override fun checkCallType() {

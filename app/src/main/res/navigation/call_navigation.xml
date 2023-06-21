@@ -89,6 +89,15 @@
             app:launchSingleTop="true" />
 
 
+        <action
+            android:id="@+id/action_testFrag"
+            app:destination="@id/multiSelectionFragment"
+            app:enterAnim="@anim/slide_item_from_right"
+            app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/voiceFragment"
+            app:popUpToInclusive="true"
+            app:launchSingleTop="true" />
+
 
     </fragment>
 
@@ -126,10 +135,11 @@
             app:popUpToInclusive="true"
             app:launchSingleTop="true" />
         <action
-            android:id="@+id/action_open_dial_fragment"
+            android:id="@+id/action_open_ringing_fragment"
             app:destination="@id/dialFragment"
             app:enterAnim="@anim/slide_item_from_right"
             app:exitAnim="@anim/slide_item_to_left"
+            app:popUpTo="@id/multiSelectionFragment"
             app:launchSingleTop="true"
             app:popUpToInclusive="true" />
         <action
@@ -177,7 +187,7 @@
 
     <fragment
         android:id="@+id/callPublicFragment"
-        android:name="com.vdotok.one2many.ui.dashboard.fragment.PublicCallFragment"
+        android:name="com.vdotok.one2many.feature.dashBoard.fragment.PublicCallFragment"
         android:label="callPublicFragment"
         tools:layout="@layout/layout_fragment_call_public">
 

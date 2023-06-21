@@ -13,12 +13,12 @@ import com.vdotok.one2many.utils.ApplicationConstants
 
 class AccountViewModel: ViewModel() {
 
-    fun loginUser(email: String, password: String) = liveData {
+    fun loginUser(email: String, password: String,projectId:String) = liveData {
 
             val service = RetrofitModule.provideRetrofitService()
             val repo = AccountRepository(service)
             emit(Result.Loading)
-            emit(repo.login(LoginUserModel(email, password, ApplicationConstants.SDK_PROJECT_ID)))
+            emit(repo.login(LoginUserModel(email, password, projectId)))
     }
 
 

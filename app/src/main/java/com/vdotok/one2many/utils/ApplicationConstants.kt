@@ -8,13 +8,15 @@ package com.vdotok.one2many.utils
 object ApplicationConstants {
 
 //    SDK AUTH PARAMS
-    const val SDK_PROJECT_ID = "Please add your project id here"
+    var SDK_PROJECT_ID = "Please add your project id here"
 
 //    PREFS CONSTANTS
     const val isLogin = "isLogin"
     const val LOGIN_INFO = "savedLoginInfo"
     const val GROUP_MODEL_KEY = "group_model_key"
     const val SDK_AUTH_RESPONSE = "SDK_AUTH_RESPONSE"
+    const val USER_PROJECT = "USER_PROJECT"
+    const val USER_BASE = "USER_BASE"
 
 //    API ERROR LOG TAGS
     const val API_ERROR = "API_ERROR"

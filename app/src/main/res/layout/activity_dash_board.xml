@@ -8,7 +8,7 @@
         android:layout_height="match_parent"
         tools:context=".ui.account.ui.AccountActivity">
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/chat_nav_host_fragment"
             android:name="androidx.navigation.fragment.NavHostFragment"
             android:layout_width="match_parent"

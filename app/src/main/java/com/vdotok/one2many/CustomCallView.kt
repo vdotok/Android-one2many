@@ -23,7 +23,6 @@ class CustomCallView(context: Context, attrs: AttributeSet) :
     var preview: SurfaceViewRenderer
     private var borderView: View
     var proxyVideoSink: ProxyVideoSink
-    private val rootEglBase = EglBase.create()
     var refID: String? = null
     var sessionID: String? = null
 
@@ -36,10 +35,6 @@ class CustomCallView(context: Context, attrs: AttributeSet) :
         proxyVideoSink = ProxyVideoSink()
         preview = findViewById(R.id.local_gl_surface_view)
         borderView = findViewById(R.id.borderView)
-        preview.setMirror(false)
-        preview.init(rootEglBase.eglBaseContext, null)
-        preview.setZOrderOnTop(true)
-        preview.setZOrderMediaOverlay(true)
 
 
         context.theme.obtainStyledAttributes(
@@ -57,6 +52,13 @@ class CustomCallView(context: Context, attrs: AttributeSet) :
                 recycle()
             }
         }
+    }
+
+    fun initiateCallView(eglContext: EglBase.Context) {
+        preview.setMirror(false)
+        preview.init(eglContext, null)
+        preview.setZOrderOnTop(true)
+        preview.setZOrderMediaOverlay(true)
     }
 
     private fun setMuteDrawable(typedArray: TypedArray) {
@@ -91,8 +93,6 @@ class CustomCallView(context: Context, attrs: AttributeSet) :
         try {
             preview.release()
             preview.clearImage()
-            rootEglBase.releaseSurface()
-            rootEglBase.release()
         } catch (ex: Exception) {
             ex.printStackTrace()
         }

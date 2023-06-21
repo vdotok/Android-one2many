@@ -3,7 +3,6 @@ package com.vdotok.one2many.ui.dashboard.fragment
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.media.projection.MediaProjection
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,9 +12,6 @@ import android.widget.Toast
 import androidx.databinding.ObservableField
 import androidx.navigation.Navigation
 import com.vdotok.network.models.GroupModel
-import com.vdotok.streaming.CallClient
-import com.vdotok.streaming.models.CallParams
-import com.vdotok.streaming.models.SessionStateInfo
 import com.vdotok.one2many.R
 import com.vdotok.one2many.databinding.FragmentDialCallPublicBinding
 import com.vdotok.one2many.extensions.hide
@@ -25,6 +21,9 @@ import com.vdotok.one2many.fragments.CallMangerListenerFragment
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.performSingleClick
+import com.vdotok.streaming.CallClient
+import com.vdotok.streaming.models.CallParams
+import com.vdotok.streaming.models.SessionStateInfo
 import org.webrtc.VideoTrack
 
 
@@ -37,22 +36,22 @@ import org.webrtc.VideoTrack
 class PublicDialCallFragment : CallMangerListenerFragment() {
     private var isIncomingCall: Boolean = false
     private lateinit var binding: FragmentDialCallPublicBinding
-    var groupModel : GroupModel? = null
-    var username : String? = null
+    var groupModel: GroupModel? = null
+    var username: String? = null
 
-    var acceptCallModel : CallParams? = null
+    var acceptCallModel: CallParams? = null
     var isVideoCall: Boolean = false
 
     private var isInternalAudioIncluded = false
-    var screenSharingApp :Boolean = false
-    var screenSharingMic :Boolean = false
-    var cameraCall :Boolean = false
-    var url : String? = null
-    var multi : Boolean = false
+    var screenSharingApp: Boolean = false
+    var screenSharingMic: Boolean = false
+    var cameraCall: Boolean = false
+    var url: String? = null
+    var multi: Boolean = false
     var participantsCount = 0
 
 
-    var userName : ObservableField<String> = ObservableField<String>()
+    var userName: ObservableField<String> = ObservableField<String>()
 
     private lateinit var callClient: CallClient
     private lateinit var prefs: Prefs
@@ -76,22 +75,22 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
     }
 
 
-
     /**
      * Function to get ths pass data from other fragment
      * */
     private fun setArgumentsData() {
 
-            isVideoCall = arguments?.getBoolean(IS_VIDEO_CALL) ?: false
-            isIncomingCall = arguments?.getBoolean("isIncoming") ?: false
-            screenSharingApp = arguments?.getBoolean("screenApp")?: false
-            screenSharingMic = arguments?.getBoolean("screenMic")?: false
-            cameraCall = arguments?.getBoolean("video")?: false
-            url = arguments?.getString("url")
-            multi = arguments?.getBoolean("multi")?: false
-            isInternalAudioIncluded = arguments?.getBoolean("internalAudio")?: false
+        isVideoCall = arguments?.getBoolean(IS_VIDEO_CALL) ?: false
+        isIncomingCall = arguments?.getBoolean("isIncoming") ?: false
+        screenSharingApp = arguments?.getBoolean("screenApp") ?: false
+        screenSharingMic = arguments?.getBoolean("screenMic") ?: false
+        cameraCall = arguments?.getBoolean("video") ?: false
+        url = arguments?.getString("url")
+        multi = arguments?.getBoolean("multi") ?: false
+        isInternalAudioIncluded = arguments?.getBoolean("internalAudio") ?: false
 
     }
+
     /**
      * Function to set data when outgoing call dial is implemented and setonClickListener
      * */
@@ -103,51 +102,56 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
         binding.imgCallOff.performSingleClick {
             rejectCall()
         }
-        if(screenSharingApp && cameraCall){
+        if (screenSharingApp && cameraCall) {
             binding.imgscreenn.show()
             binding.imgCamera.show()
-            if (!isInternalAudioIncluded && screenSharingApp){
+            if (!isInternalAudioIncluded && screenSharingApp) {
                 binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_disable)
                 binding.internalAudio.isEnabled = false
             }
             binding.imgMute.hide()
-        }else if (screenSharingMic && cameraCall){
+        } else if (screenSharingMic && cameraCall) {
             binding.imgscreenn.show()
             binding.imgCamera.show()
             binding.internalAudio.hide()
             binding.imgMute.show()
-        }else if (screenSharingApp){
-            if (!isInternalAudioIncluded && screenSharingApp){
+        } else if (screenSharingApp) {
+            if (!isInternalAudioIncluded && screenSharingApp) {
                 binding.internalAudio.setImageResource(R.drawable.ic_internal_audio_disable)
                 binding.internalAudio.isEnabled = false
             }
             binding.imgCamera.hide()
             binding.imgMute.hide()
-        }else if(screenSharingMic){
-            if (!isInternalAudioIncluded && screenSharingMic){
+        } else if (screenSharingMic) {
+            if (!isInternalAudioIncluded && screenSharingMic) {
                 binding.imgMute.show()
             }
             binding.imgCamera.hide()
             binding.internalAudio.hide()
-        }else if (cameraCall){
+        } else if (cameraCall) {
             binding.internalAudio.hide()
             binding.imgscreenn.hide()
         }
     }
+
     private fun copyTextToClipboard() {
         val textToCopy = url
-        val clipboardManager = activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboardManager =
+            activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clipData = ClipData.newPlainText("text", textToCopy)
         clipboardManager.setPrimaryClip(clipData)
         binding.root.showSnackBar(getString(R.string.copy_url_text))
     }
+
     fun rejectCall() {
         if (isIncomingCall) {
             prefs.loginInfo?.let {
-                acceptCallModel?.let { it1 -> callClient.rejectIncomingCall(
-                    it.refId!!,
-                    it1.sessionUUID
-                )
+                acceptCallModel?.let { it1 ->
+                    callClient.rejectIncomingCall(
+                        it.refId!!,
+                        it1.sessionUuid
+                    )
+                    (activity as DashBoardActivity).sessionIdList.remove(it1.sessionUuid)
                 }
             }
         } else {
@@ -155,15 +159,16 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
         }
         try {
             Navigation.findNavController(binding.root).navigate(R.id.action_open_selection_fragment)
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
     }
-
 
 
     companion object {
         const val IS_VIDEO_CALL = "IS_VIDEO_CALL"
 
         const val TAG = "PublicDialCallFragment"
+
         @JvmStatic
         fun newInstance() = PublicDialCallFragment()
 
@@ -179,15 +184,16 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
                 bundle.putParcelable(GroupModel.TAG, groupModel)
                 bundle.putBoolean(IS_VIDEO_CALL, isVideoCall)
                 bundle.putBoolean("isIncoming", false)
-                bundle.putBoolean("screenApp",screenSharingApp)
-                bundle.putBoolean("screenMic",screenSharingMic)
-                bundle.putBoolean("video",cameraCall)
-                bundle.putBoolean("internalAudio",isInternalAudioIncluded)
-                bundle.putString("url",url)
-                bundle.putInt("participantCount",participantsCount)
-                bundle.putBoolean("multi",multi)
+                bundle.putBoolean("screenApp", screenSharingApp)
+                bundle.putBoolean("screenMic", screenSharingMic)
+                bundle.putBoolean("video", cameraCall)
+                bundle.putBoolean("internalAudio", isInternalAudioIncluded)
+                bundle.putString("url", url)
+                bundle.putInt("participantCount", participantsCount)
+                bundle.putBoolean("multi", multi)
                 try {
-                    Navigation.findNavController(binding.btnCopy).navigate(R.id.action_open_call_public_fragment, bundle)
+                    Navigation.findNavController(binding.btnCopy)
+                        .navigate(R.id.action_open_call_public_fragment, bundle)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -204,7 +210,8 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
     override fun onCameraStreamReceived(stream: VideoTrack) {}
     override fun onCameraAudioOff(
         sessionStateInfo: SessionStateInfo, isMultySession: Boolean
-    ) {}
+    ) {
+    }
 
     override fun onCallRejected(reason: String) {
 //        closeFragmentWithMessage(reason)
@@ -223,7 +230,7 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
 
 
     override fun onCallMissed() {
-       closeFragmentWithMessage("Call Missed!")
+        closeFragmentWithMessage("Call Missed!")
     }
 
     override fun onCallerAlreadyBusy() {
@@ -233,7 +240,8 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
     override fun onCallEnd() {
         activity?.runOnUiThread {
             try {
-                Navigation.findNavController(binding.root).navigate(R.id.action_open_selection_fragment)
+                Navigation.findNavController(binding.root)
+                    .navigate(R.id.action_open_selection_fragment)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -241,7 +249,7 @@ class PublicDialCallFragment : CallMangerListenerFragment() {
     }
 
     override fun onPublicURL(publicURL: String) {
-       url = publicURL
+        url = publicURL
     }
 
     override fun checkCallType() {

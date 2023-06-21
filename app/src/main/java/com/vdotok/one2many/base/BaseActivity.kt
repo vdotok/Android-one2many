@@ -66,19 +66,21 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
 
     fun initCallClient() {
 
-        CallClient.getInstance(this)?.setConstants(ApplicationConstants.SDK_PROJECT_ID)
+
         CallClient.getInstance(this)?.let {
             callClient = it
             callClient.setListener(this)
         }
         connectClient()
     }
+
     // when socket is disconnected
     override fun onClose(reason: String) {
         connectClient()
     }
 
     fun connectClient() {
+        CallClient.getInstance(this)?.setConstants(prefs.userProjectId.toString())
         prefs.loginInfo?.mediaServer?.let {
             if (callClient.isConnected() == null || !callClient.isConnected())
                 callClient.connect(
@@ -170,25 +172,23 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
     }
 
     override fun registrationStatus(registerResponse: RegisterResponse) {
+        runOnUiThread {
+            when (registerResponse.registrationStatus) {
+                RegistrationStatus.REGISTER_SUCCESS -> {
+                    val userModel: LoginResponse? = prefs.loginInfo
+                    userModel?.mcToken = registerResponse.mcToken.toString()
+                    prefs.loginInfo = userModel
+//                    if (registerResponse.reConnectStatus == 1) {
+                    callClient.initiateReInviteProcess()
+//                    }
 
-        when (registerResponse.registrationStatus) {
-            RegistrationStatus.REGISTER_SUCCESS -> {
-
-                val userModel: LoginResponse? = prefs.loginInfo
-                userModel?.mcToken = registerResponse.mcToken.toString()
-                runOnUiThread {
-                    userModel?.let {
-                        prefs.loginInfo = it
-                    }
-                        callClient.initiateReInviteProcess()
                 }
-
-            }
-            RegistrationStatus.UN_REGISTER,
-            RegistrationStatus.REGISTER_FAILURE,
-            RegistrationStatus.INVALID_REGISTRATION -> {
-                Handler(Looper.getMainLooper()).post {
-                    Log.e("register", "message: ${registerResponse.responseMessage}")
+                RegistrationStatus.UN_REGISTER,
+                RegistrationStatus.REGISTER_FAILURE,
+                RegistrationStatus.INVALID_REGISTRATION -> {
+                    Handler(Looper.getMainLooper()).post {
+                        Log.e("register", "message: ${registerResponse.responseMessage}")
+                    }
                 }
             }
         }
@@ -235,9 +235,6 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
         }
     }
 
-    override fun sessionReconnecting(sessionID: String) {
-    }
-
     override fun sessionHold(sessionUUID: String) {
     }
 
@@ -254,6 +251,7 @@ abstract class BaseActivity: AppCompatActivity(), CallSDKListener {
                     isInternetConnectionRestored = true
                     reConnectStatus = true
                     isResumeState = false
+                    mListener?.onConnectionFail()
                     Log.e("Internet", "internet connection lost!")
                 }
                 else -> {

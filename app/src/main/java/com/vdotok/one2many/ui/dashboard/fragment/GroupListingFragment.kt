@@ -7,6 +7,7 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,13 +18,10 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.Navigation
 import com.vdotok.network.models.AllGroupsResponse
 import com.vdotok.network.models.DeleteGroupModel
-import com.vdotok.network.network.NetworkConnectivity
 import com.vdotok.network.models.GroupModel
 import com.vdotok.network.network.HttpResponseCodes
-import com.vdotok.streaming.CallClient
-import com.vdotok.streaming.enums.*
-import com.vdotok.streaming.models.CallParams
-import com.vdotok.streaming.models.SessionStateInfo
+import com.vdotok.network.network.NetworkConnectivity
+import com.vdotok.network.network.Result
 import com.vdotok.one2many.R
 import com.vdotok.one2many.adapter.GroupsAdapter
 import com.vdotok.one2many.databinding.FragmentGroupListingBinding
@@ -36,8 +34,11 @@ import com.vdotok.one2many.service.ProjectionService
 import com.vdotok.one2many.ui.account.AccountsActivity
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.ApplicationConstants
-import com.vdotok.network.network.Result
 import com.vdotok.one2many.utils.showDeleteGroupAlert
+import com.vdotok.streaming.CallClient
+import com.vdotok.streaming.enums.*
+import com.vdotok.streaming.models.CallParams
+import com.vdotok.streaming.models.SessionStateInfo
 import kotlinx.coroutines.*
 import org.webrtc.VideoTrack
 
@@ -48,27 +49,27 @@ import org.webrtc.VideoTrack
  *
  * This class displays the list of groups that a user is connected to
  */
-class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.InterfaceOnGroupMenuItemClick {
+class GroupListingFragment : CallMangerListenerFragment(),
+    GroupsAdapter.InterfaceOnGroupMenuItemClick {
 
     private lateinit var binding: FragmentGroupListingBinding
     private lateinit var prefs: Prefs
 
     lateinit var adapter: GroupsAdapter
     private lateinit var callClient: CallClient
-    var screenSharingApp :Boolean = false
-    var screenSharingMic :Boolean = false
-    var cameraCall :Boolean = false
-    var isVideo :Boolean = true
-    var multiSelect : Boolean = false
-    var isInternalAudioIncluded :Boolean = false
+    var screenSharingApp: Boolean = false
+    var screenSharingMic: Boolean = false
+    var cameraCall: Boolean = false
+    var isVideo: Boolean = true
+    var multiSelect: Boolean = false
+    var isInternalAudioIncluded: Boolean = false
 
     var userName = ObservableField<String>()
     private var groupList = ArrayList<GroupModel>()
-    var user : String? = null
+    var user: String? = null
 
-    var groupModel: GroupModel?= null
-    private val viewModel : AllGroupsFragmentViewModel by viewModels()
-
+    var groupModel: GroupModel? = null
+    private val viewModel: AllGroupsFragmentViewModel by viewModels()
 
 
     override fun onCreateView(
@@ -98,21 +99,35 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         binding.username = userName
         userName.set(prefs.loginInfo?.fullName)
 
-        screenSharingApp = arguments?.getBoolean("screenApp")?: false
-        screenSharingMic = arguments?.getBoolean("screenMic")?: false
-        cameraCall = arguments?.getBoolean("video")?: false
-        isInternalAudioIncluded = arguments?.getBoolean("internalAudio")?: false
-        multiSelect = arguments?.getBoolean("multiSelect")?: false
+        screenSharingApp = arguments?.getBoolean("screenApp") ?: false
+        screenSharingMic = arguments?.getBoolean("screenMic") ?: false
+        cameraCall = arguments?.getBoolean("video") ?: false
+        isInternalAudioIncluded = arguments?.getBoolean("internalAudio") ?: false
+        multiSelect = arguments?.getBoolean("multiSelect") ?: false
+
+        Log.e("StreamTest", "init: $multiSelect")
 
         binding.customToolbar.tvTitle.text = getString(R.string.group_list_title)
         binding.customToolbar.imgArrowBack.hide()
 
         binding.customToolbar.imgDone.setOnClickListener {
-          openUserListFragment(screenSharingApp,screenSharingMic,cameraCall,isInternalAudioIncluded)
+            openUserListFragment(
+                screenSharingApp,
+                screenSharingMic,
+                cameraCall,
+                isInternalAudioIncluded,
+                multiSelect
+            )
         }
 
         binding.btnNewChat.setOnClickListener {
-            openUserListFragment(screenSharingApp,screenSharingMic,cameraCall,isInternalAudioIncluded)
+            openUserListFragment(
+                screenSharingApp,
+                screenSharingMic,
+                cameraCall,
+                isInternalAudioIncluded,
+                multiSelect
+            )
         }
 
         binding.btnRefresh.setOnClickListener {
@@ -129,6 +144,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         getAllGroups()
         addPullToRefresh()
     }
+
     /**
      * Function for refreshing the updated group
      * */
@@ -163,13 +179,13 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
                     Result.Loading -> {
                         binding.progressBar.toggleVisibility()
                     }
-                    is Result.Success ->  {
+                    is Result.Success -> {
 //                        binding.progressBar.toggleVisibility()
                         handleAllGroupsResponse(it.data)
                     }
                     is Result.Failure -> {
                         binding.progressBar.toggleVisibility()
-                        if(NetworkConnectivity.isNetworkAvailable(activity).not())
+                        if (NetworkConnectivity.isNetworkAvailable(activity).not())
                             binding.root.showSnackBar(getString(R.string.no_internet))
                     }
                 }
@@ -178,7 +194,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
     private fun handleAllGroupsResponse(response: AllGroupsResponse) {
-        when(response.status) {
+        when (response.status) {
             HttpResponseCodes.SUCCESS.value -> {
                 response.let { groupsResponse ->
                     if (groupsResponse.groups?.isEmpty() == true) {
@@ -205,9 +221,10 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     override fun onEditClick(groupModel: GroupModel) {
         activity?.supportFragmentManager?.let {
             UpdateGroupNameDialog(groupModel, this::getAllGroups).show(
-            it,
-            UpdateGroupNameDialog.UPDATE_GROUP_TAG
-        ) }
+                it,
+                UpdateGroupNameDialog.UPDATE_GROUP_TAG
+            )
+        }
 
     }
 
@@ -225,20 +242,21 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
     override fun onGroupClick(groupModel: GroupModel) {
-        if (groupModel.autoCreated == 1 ){
-                    (activity as DashBoardActivity).incomingName = prefs.loginInfo?.fullName
-        }else {
+        if (groupModel.autoCreated == 1) {
+            (activity as DashBoardActivity).incomingName = prefs.loginInfo?.fullName
+        } else {
             (activity as DashBoardActivity).incomingName = groupModel.groupTitle.toString()
         }
         (activity as DashBoardActivity).incomingUserName()
         this.groupModel = groupModel
         if ((screenSharingApp && isInternalAudioIncluded && cameraCall) || (screenSharingMic && !isInternalAudioIncluded && cameraCall)
-                ||(screenSharingApp && !isInternalAudioIncluded && cameraCall) ||
-                (screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
-            || (screenSharingApp && isInternalAudioIncluded)){
-                      startScreenCapture()
+            || (screenSharingApp && !isInternalAudioIncluded && cameraCall) ||
+            (screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
+            || (screenSharingApp && isInternalAudioIncluded)
+        ) {
+            startScreenCapture()
         } else {
-            dialOneToOneCall(mediaType = MediaType.VIDEO,sessionType = SessionType.CALL)
+            dialOneToOneCall(mediaType = MediaType.VIDEO, sessionType = SessionType.CALL)
         }
 
     }
@@ -285,6 +303,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
             (activity as DashBoardActivity).connectClient()
         }
     }
+
     var mService: ProjectionService? = null
     var mBound = false
 
@@ -323,40 +342,35 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
      * @param groupId groupId object we will be sending to the server to delete group on its basis
      * */
     private fun dialogdeleteGroup(groupId: Int) {
-        showDeleteGroupAlert(this.activity, object : DialogInterface.OnClickListener {
-            override fun onClick(dialog: DialogInterface?, which: Int) {
-                val model = DeleteGroupModel()
-                model.groupId = groupId
-                deleteGroup(model)
-
-            }
-        })
+        showDeleteGroupAlert(this.activity
+        ) { dialog, which ->
+            val model = DeleteGroupModel()
+            model.groupId = groupId
+            deleteGroup(model)
+        }
     }
+
     /**
      * Function to call api for deleting a group from server
      * */
     private fun deleteGroup(model: DeleteGroupModel) {
         activity?.let { activity ->
-            viewModel.deleteGroup("Bearer ${prefs.loginInfo?.authToken}",model).observe(activity) {
+            viewModel.deleteGroup("Bearer ${prefs.loginInfo?.authToken}", model).observe(activity) {
                 binding.progressBar.toggleVisibility()
                 when (it) {
                     Result.Loading -> {
                         binding.progressBar.toggleVisibility()
                     }
-                    is Result.Success ->  {
+                    is Result.Success -> {
                         if (it.data.status == ApplicationConstants.SUCCESS_CODE) {
                             getAllGroups()
-                            binding.root.showSnackBar(getString(R.string.group_deleted))
-                        } else {
-                            binding.root.showSnackBar(it.data.message)
                         }
                         binding.progressBar.toggleVisibility()
-                        binding.root.showSnackBar(getString(R.string.group_deleted))
-                        getAllGroups()
+                        binding.root.showSnackBar(it.data.message)
                     }
                     is Result.Failure -> {
                         binding.progressBar.toggleVisibility()
-                        if(NetworkConnectivity.isNetworkAvailable(activity).not())
+                        if (NetworkConnectivity.isNetworkAvailable(activity).not())
                             binding.root.showSnackBar(getString(R.string.no_internet))
                     }
                 }
@@ -376,16 +390,6 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         }
     }
 
-    override fun navDialCall() {
-        groupModel?.let {
-            outGoingCall(it)
-        } ?: kotlin.run {
-            activity?.runOnUiThread {
-                Toast.makeText(activity, "Group Model is Empty!", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
     /**
      * Function to pass data at outgoing side call
      * @param toPeer toPeer object is the group data from server
@@ -396,11 +400,16 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         bundle.putParcelable(GroupModel.TAG, toPeer)
         bundle.putBoolean(DialCallFragment.IS_VIDEO_CALL, isVideo)
         bundle.putBoolean("isIncoming", false)
-        bundle.putBoolean("screenApp",screenSharingApp)
-        bundle.putBoolean("screenMic",screenSharingMic)
-        bundle.putBoolean("video",cameraCall)
-        bundle.putBoolean("internalAudio",isInternalAudioIncluded)
-        Navigation.findNavController(binding.root).navigate(R.id.action_open_dial_fragment, bundle)
+        bundle.putBoolean("screenApp", screenSharingApp)
+        bundle.putBoolean("screenMic", screenSharingMic)
+        bundle.putBoolean("video", cameraCall)
+        bundle.putBoolean("internalAudio", isInternalAudioIncluded)
+        try {
+            Navigation.findNavController(binding.root)
+                .navigate(R.id.action_open_dial_fragment, bundle)
+        } catch (ex: Exception) {
+            Log.e("NavigationIssue", "openCallFragment: ${ex.printStackTrace()}")
+        }
     }
 
 
@@ -410,7 +419,8 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
 
     override fun onCameraAudioOff(
         sessionStateInfo: SessionStateInfo, isMultySession: Boolean
-    ) {}
+    ) {
+    }
 
     override fun onCallMissed() {
 //        TODO("Not yet implemented")
@@ -421,7 +431,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
     override fun onPublicURL(publicURL: String) {
-       //// TODO("Not yet implemented")
+        //// TODO("Not yet implemented")
     }
 
     override fun onConnectionSuccess() {
@@ -429,7 +439,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
     override fun onConnectionFail() {
-      binding.tvLed.setImageResource(R.drawable.led_error)
+        binding.tvLed.setImageResource(R.drawable.led_error)
     }
 
     override fun checkCallType() {
@@ -440,18 +450,22 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
     }
 
     override fun sessionStart(mediaProjection: MediaProjection?) {
-        if (multiSelect){
-            initiatePublicMultiBroadcast(isInternalAudioIncluded, mediaProjection,true)
-        }else {
+        if (multiSelect) {
+            initiatePublicMultiBroadcast(isInternalAudioIncluded, mediaProjection, true)
+        } else {
             startSession(mediaProjection)
         }
     }
 
     override fun acceptedUser(participantCount: Int) {
-      ////  TODO("Not yet implemented")
+        ////  TODO("Not yet implemented")
     }
 
-    private fun initiatePublicMultiBroadcast(internalAudioIncluded: Boolean, mediaProjection: MediaProjection?, isGroupSession: Boolean) {
+    private fun initiatePublicMultiBroadcast(
+        internalAudioIncluded: Boolean,
+        mediaProjection: MediaProjection?,
+        isGroupSession: Boolean
+    ) {
         val refIdList = ArrayList<String>()
         groupModel?.participants?.forEach { participant ->
             if (participant.refID != prefs.loginInfo?.refId)
@@ -462,22 +476,33 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
 
             prefs.loginInfo?.let {
                 (activity as DashBoardActivity).dialOne2ManyPublicCall(
-                        callParams = CallParams(
-                                refId = it.refId!!,
-                                toRefIds = refIdList,
-                                callType = CallType.ONE_TO_MANY,
-                                isAppAudio = isInternalAudioIncluded,
-                                mediaType = MediaType.VIDEO,
-                                customDataPacket = (activity as DashBoardActivity).callerName.toString()
-                        ),
-                        mediaProjection,
-                        isGroupSession
+                    callParams = CallParams(
+                        refId = it.refId!!,
+                        toRefIds = refIdList,
+                        callType = CallType.ONE_TO_MANY,
+                        isAppAudio = isInternalAudioIncluded,
+                        mediaType = MediaType.VIDEO,
+                        customDataPacket = (activity as DashBoardActivity).callerName.toString()
+                    ),
+                    mediaProjection,
+                    isGroupSession
                 )
             }
+
         } else {
             (activity as DashBoardActivity).connectClient()
         }
 
+    }
+
+    override fun navDialCall() {
+        groupModel?.let {
+            outGoingCall(it)
+        } ?: kotlin.run {
+            activity?.runOnUiThread {
+                Toast.makeText(activity, "Group Model is Empty!", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     override fun onIncomingCall(model: CallParams) {
@@ -488,14 +513,16 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
             bundle.putParcelable(AcceptCallModel.TAG, model)
             bundle.putBoolean("isIncoming", true)
             bundle.putBoolean(DialCallFragment.IS_VIDEO_CALL, model.mediaType == MediaType.VIDEO)
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_dial_fragment, bundle)
+            Navigation.findNavController(binding.root)
+                .navigate(R.id.action_open_dial_fragment, bundle)
         }
     }
+
     /**
      * Function to get UserName at incoming side
      * @param model model object is used to get username from the list of user achieved from server
      * */
-    private fun getUsername(refId: String) : String? {
+    private fun getUsername(refId: String): String? {
         groupList.let {
             it.forEach { name ->
                 name.participants.forEach { username ->
@@ -517,7 +544,7 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
 
         if (callClient.isConnected() == true) {
             prefs.loginInfo?.let {
-                it.mcToken?.let {mcToken->
+                it.mcToken?.let { mcToken ->
                     (activity as DashBoardActivity).dialOne2ManyVideoCall(
                         CallParams(
                             refId = it.refId!!,
@@ -546,13 +573,15 @@ class GroupListingFragment : CallMangerListenerFragment(), GroupsAdapter.Interfa
         screenSharingApp: Boolean,
         screenSharingMic: Boolean,
         cameraCall: Boolean,
-        isInternalAudioIncluded: Boolean
+        isInternalAudioIncluded: Boolean,
+        isMultiSession: Boolean
     ) {
         val bundle = Bundle()
-        bundle.putBoolean("screenApp",screenSharingApp)
-        bundle.putBoolean("screenMic",screenSharingMic)
-        bundle.putBoolean("video",cameraCall)
-        bundle.putBoolean("internalAudio",isInternalAudioIncluded)
-        Navigation.findNavController(binding.root).navigate(R.id.action_open_userList,bundle)
+        bundle.putBoolean("screenApp", screenSharingApp)
+        bundle.putBoolean("screenMic", screenSharingMic)
+        bundle.putBoolean("video", cameraCall)
+        bundle.putBoolean("internalAudio", isInternalAudioIncluded)
+        bundle.putBoolean("multiSelect", isMultiSession)
+        Navigation.findNavController(binding.root).navigate(R.id.action_open_userList, bundle)
     }
 }

@@ -20,13 +20,14 @@ import androidx.lifecycle.MutableLiveData
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import com.google.android.material.snackbar.Snackbar
-import com.vdotok.network.models.LoginResponse
 import com.google.gson.Gson
 import com.vdotok.network.models.CallerData
+import com.vdotok.network.models.LoginResponse
 import com.vdotok.one2many.R
 import com.vdotok.one2many.VdoTok
-import com.vdotok.one2many.base.BaseActivity
+import com.vdotok.one2many.VdoTok.Companion.getVdotok
 import com.vdotok.one2many.databinding.ActivityDashBoardBinding
+import com.vdotok.one2many.extensions.showSnackBar
 import com.vdotok.one2many.interfaces.FragmentRefreshListener
 import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.utils.ApplicationConstants
@@ -39,7 +40,6 @@ import com.vdotok.streaming.enums.*
 import com.vdotok.streaming.interfaces.CallSDKListener
 import com.vdotok.streaming.models.*
 import com.vdotok.streaming.utils.checkInternetAvailable
-import kotlinx.android.synthetic.main.layout_fragment_call.*
 import org.json.JSONObject
 import org.webrtc.VideoTrack
 
@@ -50,9 +50,8 @@ import org.webrtc.VideoTrack
  * This class displays the connection between user and socket
  */
 class DashBoardActivity : AppCompatActivity(), CallSDKListener {
-
     private lateinit var binding: ActivityDashBoardBinding
-    private lateinit var navController: NavController
+    lateinit var navController: NavController
     var localStreamScreen: VideoTrack? = null
     var localStreamVideo: VideoTrack? = null
     var enableButton = false
@@ -62,6 +61,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     lateinit var callClient: CallClient
     lateinit var prefs: Prefs
     var isInternetConnectionRestored = false
+    var sessionIdList = arrayListOf<String>()
 
     var isCallInitiator = false
     var isCallInitiator2 = false
@@ -71,14 +71,15 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     private var audioManager: AudioManager? = null
     private var isResumeState = false
     private var reConnectStatus = false
-    var incomingName :String? = null
+    var incomingName: String? = null
 
     var callParams1: CallParams? = null
     var callParams2: CallParams? = null
-    var participantList: ArrayList<String>? = null
+    var participantList: LinkedHashMap<String, ArrayList<String>> = LinkedHashMap()
     var isMultiSession = false
     var isMulti = false
     var handler: Handler? = null
+    var publicSessionUrl: String? = null
 
     val mLiveDataEndCall: MutableLiveData<Boolean> by lazy {
         MutableLiveData<Boolean>()
@@ -110,8 +111,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
 
     fun initCallClient() {
-
-        CallClient.getInstance(this)?.setConstants(ApplicationConstants.SDK_PROJECT_ID)
+        CallClient.getInstance(this)?.setConstants(prefs.userProjectId.toString())
         CallClient.getInstance(this)?.let {
             callClient = it
             callClient.setListener(this)
@@ -125,9 +125,9 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         mLiveDataNetwork.observe(this) { isInternetConnected ->
             when {
                 isInternetConnected == true && isInternetConnectionRestored && !isResumeState -> {
-                    Log.e("Internet", "internet connection restored!")
                     mListener?.onConnectionSuccess()
-                    performSocketReconnection()
+                    Log.e("Internet", "internet connection restored!")
+                    if (!callClient.isConnected()) performSocketReconnection()
                 }
                 isInternetConnected == false -> {
                     isInternetConnectionRestored = true
@@ -142,22 +142,27 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         }
     }
 
-    private val listener = NavController.OnDestinationChangedListener { controller, destination, arguments ->
-        when(destination.id) {
-            R.id.callPublicFragment -> {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    mListener?.onCreated(enableButton)
-                    localStreamVideo?.let { mListener?.onCameraStreamReceived(it) }
-                },2000)
-            }
-            R.id.voiceFragment -> {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    mListener?.onCreated(enableButton)
-                },2000)
-            }
+    var dialCallOpen: Boolean = false
+    private val listener =
+        NavController.OnDestinationChangedListener { controller, destination, arguments ->
+            when (destination.id) {
+                R.id.callPublicFragment -> {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        mListener?.onCreated(enableButton)
+                        localStreamVideo?.let { mListener?.onCameraStreamReceived(it) }
+                    }, 2000)
+                }
+                R.id.voiceFragment -> {
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        mListener?.onCreated(enableButton)
+                    }, 2000)
+                }
+                R.id.dialFragment -> {
+                    dialCallOpen = true
+                }
 
+            }
         }
-    }
 
     private fun performSocketReconnection() {
         prefs.loginInfo?.let { loginResponse ->
@@ -200,7 +205,8 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     fun incomingUserName() {
         val callerData = CallerData(
-            calleName = incomingName
+            calleName = incomingName,
+            groupName = incomingName
         )
         callerName = JSONObject(gson.toJson(callerData))
     }
@@ -238,9 +244,10 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
 
-    private fun initCallObserver(){
-        mLiveDataEndCall.observe(this, {
+    private fun initCallObserver() {
+        mLiveDataEndCall.observe(this) {
             if (it) {
+                Log.e("TestNav", "initCallObserver: inside observer!")
                 callParams1 = null
                 callParams2 = null
                 sessionId = null
@@ -248,12 +255,12 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 sessionId2 = null
                 mListener?.onCallEnd()
             }
-        })
-        mLiveDataLeftParticipant.observe(this, {
+        }
+        mLiveDataLeftParticipant.observe(this) {
             if (!TextUtils.isEmpty(it)) {
                 mListener?.onParticipantLeftCall(it)
             }
-        })
+        }
 
     }
 
@@ -267,23 +274,25 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
      * */
     fun muteUnMuteCall(screenShare: Boolean) {
         val session = if (screenShare) {
-            if (callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.SCREEN
-            ) {
-                callParams1?.sessionUUID.toString()
-            } else if (callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.SCREEN
-            ) {
-                callParams2?.sessionUUID.toString()
-            } else null
-        } else if (callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
+            when (SessionType.SCREEN) {
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams1?.sessionUuid.toString()
+                }
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams2?.sessionUuid.toString()
+                }
+                else -> null
+            }
+        } else if (callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
                 ?.getSessionType() == SessionType.CALL
         ) {
-            callParams1?.sessionUUID.toString()
-        } else if (callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
+            callParams1?.sessionUuid.toString()
+        } else if (callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
                 ?.getSessionType() == SessionType.CALL
         ) {
-            callParams2?.sessionUUID.toString()
+            callParams2?.sessionUuid.toString()
         } else null
 
         session?.let {
@@ -304,14 +313,14 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
      * Function to switch Camera
      * */
     fun switchCamera() {
-        val session = if (callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
+        val session = if (callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
                 ?.getSessionType() == SessionType.CALL
         ) {
-            callParams1?.sessionUUID.toString()
-        } else if (callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
+            callParams1?.sessionUuid.toString()
+        } else if (callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
                 ?.getSessionType() == SessionType.CALL
         ) {
-            callParams2?.sessionUUID.toString()
+            callParams2?.sessionUuid.toString()
         } else null
         session?.let { callClient.switchCamera(it) }
     }
@@ -325,6 +334,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     override fun onPublicURL(publicURL: String) {
         mListener?.onPublicURL(publicURL)
+        publicSessionUrl = publicURL
     }
 
     override fun connectionStatus(enumConnectionStatus: EnumConnectionStatus) {
@@ -337,7 +347,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                             authToken = it.authorizationToken!!,
                             refId = it.refId!!, reconnectStatus = if (reConnectStatus) 1 else 0
                         )
-                      reConnectStatus = false
+                        reConnectStatus = false
                     }
                 }
             }
@@ -373,22 +383,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                     Toast.makeText(this, "Closed !", Toast.LENGTH_SHORT).show()
                 }
             }
-            EnumConnectionStatus.SOCKET_PING -> {
-
-                handler?.removeCallbacks(runnableConnectClient)
-                handler?.postDelayed(runnableConnectClient, 20000)
-
-            }
             else -> {
-            }
-        }
-    }
-
-
-    val runnableConnectClient by lazy {
-        object : Runnable {
-            override fun run() {
-                connectClient()
             }
         }
     }
@@ -398,7 +393,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     override fun audioVideoState(sessionStateInfo: SessionStateInfo) {
-
         runOnUiThread {
             mListener?.onCameraAudioOff(sessionStateInfo, isMulti)
         }
@@ -406,45 +400,58 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     override fun incomingCall(callParams: CallParams) {
+//        get the username or the group name
         if (callParams.customDataPacket != null) {
             val dataValue = JSONObject(callParams.customDataPacket.toString())
             val callerName: CallerData = gson.fromJson(dataValue.toString(), CallerData::class.java)
-            callParams.customDataPacket = callerName.calleName
+            callParams.customDataPacket =
+                if (callerName.groupName.isNullOrEmpty()) callerName.calleName else callerName.groupName
         }
-        isCallInitiator = false
-            if (sessionId?.let { callClient.getActiveSessionClient(it) } != null || sessionId2?.let {
-                    callClient.getActiveSessionClient(
-                        it
-                    )
-                } != null) {
-                callClient.sessionBusy(callParams.refId, callParams.sessionUUID)
-            } else {
-                if (callParams1 == null) {
-                    callParams1 = callParams.copy()
-                } else {
-                    callParams2 = callParams.copy()
-                    isMulti = true
-                    isMultiSession = true
-                }
 
-                if ((callParams1 != null && callParams2 != null) && isMultiSession) {
-                    callParams1?.let {
-                        mListener?.onIncomingCall(it)
-                    }
-                    (application as VdoTok).callParam1 = null
-                    (application as VdoTok).callParam2 = null
-                } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUUID.isEmpty()) {
-                    callParams1?.let {
-                        mListener?.onIncomingCall(it)
-                        (application as VdoTok).callParam1 = null
-                        (application as VdoTok).callParam2 = null
-                    }
-                }
+        if (!sessionIdList.contains(callParams.sessionUuid)) sessionIdList.add(callParams.sessionUuid)
+        if (callParams.associatedSessionUuid.isNotEmpty() && !sessionIdList.contains(callParams.associatedSessionUuid)) sessionIdList.add(
+            callParams.associatedSessionUuid
+        )
+
+        if (sessionId?.let { callClient.getActiveSessionClient(it) } != null || sessionId2?.let {
+                callClient.getActiveSessionClient(
+                    it
+                )
+            } != null || dialCallOpen) {
+            if (callParams.associatedSessionUuid.isEmpty()) { // it is a single session
+                callClient.sessionBusy(callParams.refId, callParams.sessionUuid)
+            } else { // it is a multi session
+                callClient.sessionBusy(callParams.refId, callParams.sessionUuid)
+                callClient.sessionBusy(callParams.refId, callParams.associatedSessionUuid)
+            }
+        } else {
+            if (callParams1 == null) {
+                callParams1 = callParams.copy()
+            } else {
+                callParams2 = callParams.copy()
+                isMulti = true
+                isMultiSession = true
             }
 
-        Log.e(
+            if ((callParams1 != null && callParams2 != null) && isMultiSession) {
+                callParams1?.let {
+                    mListener?.onIncomingCall(it)
+                }
+                (application as VdoTok).callParam1 = null
+                (application as VdoTok).callParam2 = null
+            } else if (callParams1 != null && !isMultiSession && callParams.associatedSessionUuid.isEmpty()) {
+                callParams1?.let {
+                    mListener?.onIncomingCall(it)
+                    (application as VdoTok).callParam1 = null
+                    (application as VdoTok).callParam2 = null
+                }
+            }
+        }
+
+        Log.d(
             "incomingCall",
-            " incomingCall callParam : " + callParams1 + "-- callParams2" + callParams2
+            " incomingCall callParam : " + callParams1?.sessionUuid.toString()
+                    + "-- callParams2" + callParams2?.sessionUuid.toString()
         )
     }
 
@@ -453,6 +460,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         callParams1 = null
         callParams2 = null
         navController.addOnDestinationChangedListener(listener)
+        getVdotok()?.appIsActive = false
         super.onDestroy()
     }
 
@@ -461,40 +469,40 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         askForPermissions()
         navController.addOnDestinationChangedListener(listener)
         super.onResume()
-     }
+    }
 
     fun acceptMultiCall() {
         prefs.loginInfo?.let {
             callParams2?.let { it1 ->
                 callClient.acceptIncomingCall(it.refId.toString(), it1)
             }
-            if (isMultiSession){
-                if (!callParams1?.sessionUUID.isNullOrEmpty() && !callParams2?.sessionUUID.isNullOrEmpty()){
-                   enableButton = true
-                   }
+            if (isMultiSession) {
+                if (!callParams1?.sessionUuid.isNullOrEmpty() && !callParams2?.sessionUuid.isNullOrEmpty()) {
+                    enableButton = true
+                }
             }
             isMultiSession = false
         }
     }
 
     private fun turnSpeakerOff() {
-          audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-          audioManager?.let {
-          it.isSpeakerphoneOn = false
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioManager?.let {
+            it.isSpeakerphoneOn = false
         }
-     }
+    }
 
     fun acceptIncomingCall(callParams: CallParams) {
         prefs.loginInfo?.let {
             sessionId = callClient.acceptIncomingCall(it.refId.toString(), callParams)
-            callParams.sessionUUID = sessionId.toString()
+            callParams.sessionUuid = sessionId.toString()
         }
         callParams1 = callParams
         if (!isMultiSession) {
-            if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()) {
+            if (!callParams1?.sessionUuid.isNullOrEmpty() || !callParams2?.sessionUuid.isNullOrEmpty()) {
                 enableButton = true
             }
-        }else{
+        } else {
             enableButton = false
         }
     }
@@ -502,14 +510,15 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     fun dialOne2ManyCall(callParams: CallParams, mediaProjection: MediaProjection?) {
         isCallInitiator = true
         isCallInitiator2 = true
-        participantList = callParams.toRefIds
         sessionId = callClient.startSession(callParams, mediaProjection)
-        callParams.sessionUUID = sessionId.toString()
+        sessionId?.let { sessionIdList.add(it) }
+        sessionId?.let { participantList[it] = callParams.toRefIds }
+        callParams.sessionUuid = sessionId.toString()
         callParams1 = callParams
         (application as VdoTok).callParam1 = callParams1
         (application as VdoTok).callParam2 = null
-         mListener?.navDialCall()
-        if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()){
+        mListener?.navDialCall()
+        if (!callParams1?.sessionUuid.isNullOrEmpty() || !callParams2?.sessionUuid.isNullOrEmpty()) {
             enableButton = true
         }
 
@@ -522,45 +531,49 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     ) {
         isCallInitiator = true
         isCallInitiator2 = true
-        participantList = callParams.toRefIds
 
         callParams1 = CallParams(
             callParams.refId,
             callParams.toRefIds,
             callParams.mcToken,
-            callParams.sessionUUID,
+            callParams.sessionUuid,
             callParams.requestId
         )
         callParams2 = callParams.copy()
-
         callParams1?.mediaType = MediaType.VIDEO
         callParams2?.mediaType = MediaType.VIDEO
         callParams1?.sessionType = SessionType.CALL
         callParams2?.sessionType = SessionType.SCREEN
         (application as VdoTok).callParam1 = callParams1
         (application as VdoTok).callParam2 = callParams2
+
         callClient.startMultiSessionV2(callParams, mediaProjection, isGroupSession)
+
     }
 
     override fun multiSessionCreated(sessionIds: Pair<String, String>) {
-            callParams1?.sessionUUID = sessionIds.first
-            callParams2?.sessionUUID = sessionIds.second
-            (application as VdoTok).callParam2 = callParams2
-            (application as VdoTok).callParam1  = callParams1
-            mListener?.navDialCall()
-         if (!callParams1?.sessionUUID.isNullOrEmpty() && !callParams2?.sessionUUID.isNullOrEmpty()) {
-             enableButton = true
-         }
+        callParams1?.sessionUuid = sessionIds.first
+        callParams2?.sessionUuid = sessionIds.second
+        sessionIdList.add(sessionIds.first)
+        sessionIdList.add(sessionIds.second)
+        (application as VdoTok).callParam2 = callParams2
+        (application as VdoTok).callParam1 = callParams1
+        callParams1?.let { participantList[sessionIds.first] = it.toRefIds }
+        mListener?.navDialCall()
+        if (!callParams1?.sessionUuid.isNullOrEmpty() && !callParams2?.sessionUuid.isNullOrEmpty()) {
+            enableButton = true
+        }
     }
 
     fun dialOne2ManyVideoCall(callParams: CallParams) {
         sessionId2 = callClient.dialOne2ManyCall(callParams)
-        callParams.sessionUUID = sessionId2.toString()
+        callParams.sessionUuid = sessionId2.toString()
+        sessionIdList.add(callParams.sessionUuid)
         callParams2 = callParams
         (application as VdoTok).callParam2 = callParams2
-        (application as VdoTok).callParam1  = null
+        (application as VdoTok).callParam1 = null
         mListener?.navDialCall()
-        if (!callParams1?.sessionUUID.isNullOrEmpty() || !callParams2?.sessionUUID.isNullOrEmpty()){
+        if (!callParams1?.sessionUuid.isNullOrEmpty() || !callParams2?.sessionUuid.isNullOrEmpty()) {
             enableButton = true
         }
     }
@@ -574,10 +587,10 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             localStreamVideo = null
             localStreamScreen = null
             val sessionList = ArrayList<String>().apply {
-                callParams1?.sessionUUID?.let {
+                callParams1?.sessionUuid?.let {
                     add(it)
                 }
-                callParams2?.sessionUUID?.let {
+                callParams2?.sessionUuid?.let {
                     add(it)
                 }
             }
@@ -590,15 +603,15 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
     private fun turnMicState() {
         if (callParams1?.isInitiator == true || callParams2?.isInitiator == true) {
-            if (!callClient.isAudioEnabled(callParams1?.sessionUUID.toString())) {
+            if (!callClient.isAudioEnabled(callParams1?.sessionUuid.toString())) {
                 callClient.muteUnMuteMic(
                     callParams1?.refId.toString(),
-                    callParams1?.sessionUUID.toString()
+                    callParams1?.sessionUuid.toString()
                 )
-            } else if (!callClient.isAudioEnabled(callParams2?.sessionUUID.toString())) {
+            } else if (!callClient.isAudioEnabled(callParams2?.sessionUuid.toString())) {
                 callClient.muteUnMuteMic(
                     callParams2?.refId.toString(),
-                    callParams2?.sessionUUID.toString()
+                    callParams2?.sessionUuid.toString()
                 )
             }
         }
@@ -607,26 +620,30 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     fun pauseVideo(isScreenShare: Boolean) {
 
         val session = if (isScreenShare) {
-            if (callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.SCREEN
-            ) {
-                callParams1?.sessionUUID.toString()
-            } else if (callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.SCREEN
-            ) {
-                callParams2?.sessionUUID.toString()
-            } else null
+            when (SessionType.SCREEN) {
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams1?.sessionUuid.toString()
+                }
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams2?.sessionUuid.toString()
+                }
+                else -> null
+            }
         } else {
 
-            if (callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.CALL
-            ) {
-                callParams1?.sessionUUID.toString()
-            } else if (callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.CALL
-            ) {
-                callParams2?.sessionUUID.toString()
-            } else null
+            when (SessionType.CALL) {
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams1?.sessionUuid.toString()
+                }
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams2?.sessionUuid.toString()
+                }
+                else -> null
+            }
         }
 
         session?.let {
@@ -638,7 +655,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
         Log.e(
             "videostate",
-            "videoState : " + "   --- isScreenSharing : " + isScreenShare + " ---- isMultiSession : " + isMultiSession
+            "videoState :    --- isScreenSharing : $isScreenShare ---- isMultiSession : $isMultiSession"
         )
 
     }
@@ -647,26 +664,30 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
         val session = if (isScreenShare) {
             // in case of screen sharing no change video state of camera
-            if (callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.SCREEN
-            ) {
-                callParams1?.sessionUUID.toString()
-            } else if (callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.SCREEN
-            ) {
-                callParams2?.sessionUUID.toString()
-            } else null
+            when (SessionType.SCREEN) {
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams1?.sessionUuid.toString()
+                }
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams2?.sessionUuid.toString()
+                }
+                else -> null
+            }
         } else {
 
-            if (callClient.getActiveSessionClient(callParams1?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.CALL
-            ) {
-                callParams1?.sessionUUID.toString()
-            } else if (callClient.getActiveSessionClient(callParams2?.sessionUUID.toString())
-                    ?.getSessionType() == SessionType.CALL
-            ) {
-                callParams2?.sessionUUID.toString()
-            } else null
+            when (SessionType.CALL) {
+                callClient.getActiveSessionClient(callParams1?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams1?.sessionUuid.toString()
+                }
+                callClient.getActiveSessionClient(callParams2?.sessionUuid.toString())
+                    ?.getSessionType() -> {
+                    callParams2?.sessionUuid.toString()
+                }
+                else -> null
+            }
 
         }
         session?.let {
@@ -682,19 +703,24 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         runOnUiThread { mListener?.sessionStart(mediaProjection) }
     }
 
+    override fun permissionError(permissionErrorList: ArrayList<PermissionType>) {
+
+    }
+
     override fun registrationStatus(registerResponse: RegisterResponse) {
 
         when (registerResponse.registrationStatus) {
             RegistrationStatus.REGISTER_SUCCESS -> {
-
                 val userModel: LoginResponse? = prefs.loginInfo
                 userModel?.mcToken = registerResponse.mcToken.toString()
                 runOnUiThread {
                     userModel?.let {
                         prefs.loginInfo = it
                     }
-                 callClient.initiateReInviteProcess()
+                    binding.root.showSnackBar("Socket Connected!")
+                    callClient.initiateReInviteProcess()
                 }
+                getVdotok()?.appIsActive = true
 
             }
             RegistrationStatus.UN_REGISTER,
@@ -709,7 +735,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
 
     override fun callStatus(callInfoResponse: CallInfoResponse) {
-
         when (callInfoResponse.callStatus) {
             CallStatus.CALL_CONNECTED -> {
                 runOnUiThread {
@@ -726,7 +751,6 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
 
                 }
             }
-            CallStatus.CALL_REJECTED,
             CallStatus.SERVICE_SUSPENDED,
             CallStatus.OUTGOING_CALL_ENDED,
             CallStatus.NO_SESSION_EXISTS -> {
@@ -734,10 +758,30 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 isMulti = false
                 isMultiSession = false
                 enableButton = false
+                sessionIdList.remove(callInfoResponse.callParams?.sessionUuid)
                 mLiveDataEndCall.postValue(true)
             }
 
+            CallStatus.TARGET_IS_BUSY,
+            CallStatus.TARGET_NOT_FOUND,
+            CallStatus.SESSION_BUSY -> {
+                if (sessionIdList.contains(callInfoResponse.callParams?.sessionUuid)) {
+                    sessionIdList.remove(callInfoResponse.callParams?.sessionUuid)
+                }
+                if (sessionIdList.isEmpty() && dialCallOpen) {
+                    if (isCallInitiator && isCallInitiator2) {
+                        mListener?.onCallerAlreadyBusy()
+                    } else {
+                        mLiveDataEndCall.postValue(true)
+                    }
+                }
+            }
+//            CallStatus.TARGET_IS_BUSY -> {
+//                mListener?.onCallerAlreadyBusy()
+//            }
+
             CallStatus.CALL_MISSED -> {
+                sessionIdList.remove(callInfoResponse.callParams?.sessionUuid)
                 sessionId?.let {
                     if (callClient.getActiveSessionClient(it) == null)
                         mLiveDataEndCall.postValue(true)
@@ -746,20 +790,33 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                     mLiveDataEndCall.postValue(true)
                 }
             }
-            CallStatus.PARTICIPANT_LEFT_CALL -> {
+
+            CallStatus.CALL_REJECTED -> {
+                sessionIdList.remove(callInfoResponse.callParams?.sessionUuid)
+                if (participantList.containsKey(callInfoResponse.callParams?.sessionUuid)) {
+                    val list = participantList[callInfoResponse.callParams?.sessionUuid]
+                    list?.let {
+                        if (it.size > 1) {
+                            it.remove(callInfoResponse.callParams?.refId)
+                        } else {
+                            turnSpeakerOff()
+                            isMulti = false
+                            isMultiSession = false
+                            enableButton = false
+                            mLiveDataEndCall.postValue(true)
+                        }
+                    }
+                }
+            }
+
+            CallStatus.PARTICIPANT_LEFT_CALL, CallStatus.NO_ANSWER_FROM_TARGET -> {
                 mLiveDataLeftParticipant.postValue(callInfoResponse.callParams?.toRefIds?.get(0))
             }
-            CallStatus.NO_ANSWER_FROM_TARGET -> {
-                mLiveDataLeftParticipant.postValue(callInfoResponse.callParams?.toRefIds?.get(0))
-            }
-            CallStatus.TARGET_IS_BUSY -> {
-                mListener?.onCallerAlreadyBusy()
-            }
-            CallStatus.INSUFFICIENT_BALANCE ->{
+            CallStatus.INSUFFICIENT_BALANCE -> {
                 mListener?.onInsufficientBalance()
             }
             CallStatus.NEW_PARTICIPANT_ARRIVED,
-            CallStatus.EXISTING_PARTICIPANTS->{
+            CallStatus.EXISTING_PARTICIPANTS -> {
                 callInfoResponse.callParams?.participantCount?.let { mListener?.acceptedUser(it) }
             }
             else -> {
@@ -799,7 +856,7 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         localStreamVideo = stream
         Handler(Looper.getMainLooper()).postDelayed({
             mListener?.onCameraStreamReceived(stream)
-        },200)
+        }, 300)
     }
 
 
@@ -832,14 +889,15 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
     }
 
     override fun sessionHold(sessionUUID: String) {
-
     }
 
     override fun sessionReconnecting(sessionID: String) {
-
+        Log.e("remotestream",sessionID)
+        mListener?.clearView(sessionID)
     }
 
     fun logout() {
+        endCall()
         callClient.disConnectSocket()
         callClient.unRegister(
             ownRefId = prefs.loginInfo?.refId.toString()

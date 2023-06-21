@@ -34,4 +34,5 @@ interface FragmentRefreshListener {
     fun acceptedUser(participantCount: Int)
     fun onInsufficientBalance(){}
     fun onCreated(created:Boolean){}
+    fun clearView(session:String){}
 }

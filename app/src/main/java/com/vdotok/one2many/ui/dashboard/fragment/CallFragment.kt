@@ -19,9 +19,6 @@ import androidx.navigation.Navigation
 import com.vdotok.network.models.GroupModel
 import com.vdotok.network.models.Participants
 import com.vdotok.one2many.CustomCallView
-import com.vdotok.streaming.CallClient
-import com.vdotok.streaming.models.CallParams
-import com.vdotok.streaming.models.SessionStateInfo
 import com.vdotok.one2many.R
 import com.vdotok.one2many.VdoTok
 import com.vdotok.one2many.VdoTok.Companion.getVdotok
@@ -34,6 +31,9 @@ import com.vdotok.one2many.prefs.Prefs
 import com.vdotok.one2many.ui.dashboard.DashBoardActivity
 import com.vdotok.one2many.utils.TimeUtils.getTimeFromSeconds
 import com.vdotok.one2many.utils.performSingleClick
+import com.vdotok.streaming.CallClient
+import com.vdotok.streaming.models.CallParams
+import com.vdotok.streaming.models.SessionStateInfo
 import kotlinx.android.synthetic.main.layout_fragment_call.*
 import org.webrtc.EglBase
 import org.webrtc.VideoTrack
@@ -53,16 +53,16 @@ class CallFragment : CallMangerListenerFragment() {
     private var isIncomingCall = false
     private lateinit var binding: LayoutFragmentCallBinding
     private var isInternalAudioIncluded = false
-    var screenSharingApp :Boolean = false
-    var screenSharingMic :Boolean = false
-    var cameraCall :Boolean = false
+    var screenSharingApp: Boolean = false
+    var screenSharingMic: Boolean = false
+    var cameraCall: Boolean = false
 
     private lateinit var callClient: CallClient
-    private var groupModel : GroupModel? = null
-    private var name : String? = null
+    private var groupModel: GroupModel? = null
+    private var name: String? = null
     private lateinit var prefs: Prefs
 
-    private var userName : ObservableField<String> = ObservableField<String>()
+    private var userName: ObservableField<String> = ObservableField<String>()
     private var groupList = ArrayList<GroupModel>()
     private var isInternalAudioResume = false
     private var isMuted = false
@@ -82,7 +82,7 @@ class CallFragment : CallMangerListenerFragment() {
 
     private var xPoint = 0.0f
     private var yPoint = 0.0f
-    var user : String? = null
+    var user: String? = null
     var rootEglBase: EglBase? = null
     var participantsCount = 0
     var loop = 0
@@ -91,10 +91,10 @@ class CallFragment : CallMangerListenerFragment() {
     var isInitiator = false
 
     private lateinit var screenRemoteViewReference: CustomCallView
-    private lateinit var videoRemoteViewReference:  CustomCallView
+    private lateinit var videoRemoteViewReference: CustomCallView
 
 
-    private val listUser =  ArrayList<Participants>()
+    private val listUser = ArrayList<Participants>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -125,22 +125,23 @@ class CallFragment : CallMangerListenerFragment() {
         }
         groupList.clear()
         isVideoCameraCall = arguments?.getBoolean(DialCallFragment.IS_VIDEO_CALL) ?: false
-        isScreenSharingCall = arguments?.getBoolean(DialCallFragment.IS_VIDEO_CALL)?: false
+        isScreenSharingCall = arguments?.getBoolean(DialCallFragment.IS_VIDEO_CALL) ?: false
         arguments?.get(GroupModel.TAG)?.let {
 //            this is for initiator
             isInitiator = true
             groupModel = it as GroupModel?
             isIncomingCall = arguments?.get("isIncoming") as Boolean
-            getUserName(groupModel!!,isVideoCameraCall)
-            screenSharingApp = arguments?.getBoolean("screenApp")?: false
-            screenSharingMic = arguments?.getBoolean("screenMic")?: false
-            cameraCall = arguments?.getBoolean("video")?: false
+            getUserName(groupModel!!, isVideoCameraCall)
+            screenSharingApp = arguments?.getBoolean("screenApp") ?: false
+            screenSharingMic = arguments?.getBoolean("screenMic") ?: false
+            cameraCall = arguments?.getBoolean("video") ?: false
             participantsCount = arguments?.getInt("participantsCount")!!
-            isInternalAudioIncluded = arguments?.getBoolean("internalAudio")?: false
+            isInternalAudioIncluded = arguments?.getBoolean("internalAudio") ?: false
         } ?: kotlin.run {
 //            this is for receiver
             isInitiator = false
-            groupList = arguments?.getParcelableArrayList<GroupModel>("grouplist") as ArrayList<GroupModel>
+            groupList =
+                arguments?.getParcelableArrayList<GroupModel>("grouplist") as ArrayList<GroupModel>
             name = (arguments?.get("userName") as CharSequence?).toString()
             callParams = arguments?.getParcelable(AcceptCallModel.TAG) as CallParams?
             isIncomingCall = true
@@ -148,16 +149,17 @@ class CallFragment : CallMangerListenerFragment() {
         }
         callClient.setSpeakerEnable(true)
         binding.tvcount.text = participantsCount.toString()
-        displayUi(isIncomingCall,screenSharingApp,screenSharingMic,cameraCall)
+        displayUi(isIncomingCall, screenSharingApp, screenSharingMic, cameraCall)
 
         binding.imgCallOff.performSingleClick {
             stopTimer()
             (activity as DashBoardActivity).endCall()
             releaseCallView()
-            if (!isInitiator)
-                startActivity(Intent.makeRestartActivityTask(activity?.intent?.component))
-            else
-                Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            startActivity(Intent.makeRestartActivityTask(activity?.intent?.component))
+//            if (!isInitiator)
+//                startActivity(Intent.makeRestartActivityTask(activity?.intent?.component))
+//            else
+//                Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
         }
 
 
@@ -170,8 +172,10 @@ class CallFragment : CallMangerListenerFragment() {
             }
 
             when {
-                screenSharingMic && cameraCall -> { (activity as DashBoardActivity).muteUnMuteCall(false)
-                    (activity as DashBoardActivity).muteUnMuteCall(true) }
+                screenSharingMic && cameraCall -> {
+                    (activity as DashBoardActivity).muteUnMuteCall(false)
+                    (activity as DashBoardActivity).muteUnMuteCall(true)
+                }
                 cameraCall -> (activity as DashBoardActivity).muteUnMuteCall(false)
                 else -> (activity as DashBoardActivity).muteUnMuteCall(true)
 
@@ -182,17 +186,19 @@ class CallFragment : CallMangerListenerFragment() {
             speakerButtonAction()
         }
 
-        val callback: OnBackPressedCallback = object : OnBackPressedCallback(true // default to enabled
-        ) { override fun handleOnBackPressed() {}
+        val callback: OnBackPressedCallback = object : OnBackPressedCallback(
+            true // default to enabled
+        ) {
+            override fun handleOnBackPressed() {}
         }
         requireActivity().onBackPressedDispatcher.addCallback(
             this.viewLifecycleOwner,  // LifecycleOwner
             callback
         )
         binding.ivCamSwitch.setOnClickListener {
-            if (!isCamSwitch){
+            if (!isCamSwitch) {
                 binding.remoteView.preview.setMirror(false)
-            }else{
+            } else {
                 binding.remoteView.preview.setMirror(true)
             }
             isCamSwitch = isCamSwitch.not()
@@ -238,7 +244,11 @@ class CallFragment : CallMangerListenerFragment() {
         if (isIncomingCall) {
             screenRemoteViewReference.setOnClickListener {
                 activity?.let { activity ->
-                    screenRemoteViewReference.swapViews(activity,screenRemoteViewReference,videoRemoteViewReference)
+                    screenRemoteViewReference.swapViews(
+                        activity,
+                        screenRemoteViewReference,
+                        videoRemoteViewReference
+                    )
                     swap = swap.not()
                 }
             }
@@ -247,9 +257,9 @@ class CallFragment : CallMangerListenerFragment() {
         }
         binding.imgscreenn.setOnClickListener {
             if (isScreenSharingCall) {
-                if (screenSharingMic && cameraCall || screenSharingApp && cameraCall){
+                if (screenSharingMic && cameraCall || screenSharingApp && cameraCall) {
                     binding.localView.showHideAvatar(true)
-                }else{
+                } else {
                     binding.remoteView.show()
                     binding.tvScreen.hide()
                     binding.remoteView.showHideAvatar(true)
@@ -257,9 +267,9 @@ class CallFragment : CallMangerListenerFragment() {
                 (activity as DashBoardActivity).pauseVideo(true)
                 binding.imgscreenn.setImageResource(R.drawable.ic_screensharing_off)
             } else {
-                if (screenSharingMic && cameraCall || screenSharingApp && cameraCall){
+                if (screenSharingMic && cameraCall || screenSharingApp && cameraCall) {
                     binding.localView.showHideAvatar(false)
-                }else{
+                } else {
                     binding.tvScreen.show()
                     binding.remoteView.hide()
                     binding.remoteView.showHideAvatar(false)
@@ -280,8 +290,9 @@ class CallFragment : CallMangerListenerFragment() {
 
     private fun checkSessionType() {
         if ((screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
-            || (screenSharingApp && isInternalAudioIncluded)){
-            Handler(Looper.getMainLooper()).postDelayed({moveToDashboard()}, 1500)
+            || (screenSharingApp && isInternalAudioIncluded)
+        ) {
+            Handler(Looper.getMainLooper()).postDelayed({ moveToDashboard() }, 1500)
         }
     }
 
@@ -304,7 +315,7 @@ class CallFragment : CallMangerListenerFragment() {
     private fun getUserName(groupModel: GroupModel?, videoCall: Boolean) {
         groupModel?.let { it ->
             if (groupModel.autoCreated == 1 && videoCall) {
-                it.participants.forEach { name->
+                it.participants.forEach { name ->
                     if (name.fullname?.equals(prefs.loginInfo?.fullName) == false) {
                         userName.set(name.fullname)
 
@@ -436,6 +447,7 @@ class CallFragment : CallMangerListenerFragment() {
         timer = null
         binding.tvTime.text = getTimeFromSeconds(callDuration)
     }
+
     private fun speakerButtonAction() {
         if (callClient.isSpeakerEnabled()) {
             callClient.setSpeakerEnable(false)
@@ -461,7 +473,12 @@ class CallFragment : CallMangerListenerFragment() {
     override fun outGoingCall(toPeer: GroupModel) {}
 
 
-    override fun onRemoteStreamReceived(stream: VideoTrack, refId: String, sessionID: String, isCameraStream: Boolean) {
+    override fun onRemoteStreamReceived(
+        stream: VideoTrack,
+        refId: String,
+        sessionID: String,
+        isCameraStream: Boolean
+    ) {
         activity?.runOnUiThread {
             if ((activity as DashBoardActivity).callParams1?.sessionUuid == sessionID) {
                 binding.remoteView.preview.setMirror(false)
@@ -474,7 +491,7 @@ class CallFragment : CallMangerListenerFragment() {
 
             } else {
                 binding.localView.show()
-                Log.e("remotestream","only else")
+                Log.e("remotestream", "only else")
                 try {
                     stream.addSink(binding.localView.setView())
                 } catch (e: Exception) {
@@ -502,7 +519,7 @@ class CallFragment : CallMangerListenerFragment() {
     }
 
 
-    private fun setUserNameUI( refId: String) {
+    private fun setUserNameUI(refId: String) {
         userName.set(name)
     }
 
@@ -519,11 +536,13 @@ class CallFragment : CallMangerListenerFragment() {
         }
         activity?.let { Handler(it.mainLooper) }?.post(myRunnable)
     }
+
     override fun onCameraAudioOff(sessionStateInfo: SessionStateInfo, isMultySession: Boolean) {
         activity?.runOnUiThread {
             Log.d("sessionState", sessionStateInfo.toString())
             if (!(activity as DashBoardActivity).callParams1?.sessionUuid.isNullOrEmpty() &&
-                !(activity as DashBoardActivity).callParams2?.sessionUuid.isNullOrEmpty()) {
+                !(activity as DashBoardActivity).callParams2?.sessionUuid.isNullOrEmpty()
+            ) {
                 if (sessionStateInfo.isScreenShare == true) {
                     when {
                         sessionStateInfo.videoState == 1 -> {
@@ -579,7 +598,8 @@ class CallFragment : CallMangerListenerFragment() {
         try {
             listUser.clear()
             (this.activity as DashBoardActivity).sessionId = null
-            Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+            Navigation.findNavController(binding.root)
+                .navigate(R.id.action_open_multiSelectionFragment)
         } catch (e: Exception) {
             Log.e("Navigation Error!", "onCallMissed: ${e.message}")
         }
@@ -593,7 +613,8 @@ class CallFragment : CallMangerListenerFragment() {
             if (!isInitiator)
                 startActivity(Intent.makeRestartActivityTask(activity?.intent?.component))
             else
-                Navigation.findNavController(binding.root).navigate(R.id.action_open_multiSelectionFragment)
+                Navigation.findNavController(binding.root)
+                    .navigate(R.id.action_open_multiSelectionFragment)
         } catch (e: Exception) {
             Log.e("Navigation Error!", "onCallEnd: ${e.message}")
         }
@@ -604,10 +625,12 @@ class CallFragment : CallMangerListenerFragment() {
 
     override fun checkCallType() {
         if ((screenSharingApp && !isInternalAudioIncluded) || (screenSharingMic && !isInternalAudioIncluded)
-            || (screenSharingApp && isInternalAudioIncluded)){
-            Handler(Looper.getMainLooper()).postDelayed({moveToDashboard()}, 1000)
+            || (screenSharingApp && isInternalAudioIncluded)
+        ) {
+            Handler(Looper.getMainLooper()).postDelayed({ moveToDashboard() }, 1000)
         }
     }
+
     private fun moveToDashboard() {
         val startMain = Intent(Intent.ACTION_MAIN)
         startMain.addCategory(Intent.CATEGORY_HOME)
@@ -616,16 +639,16 @@ class CallFragment : CallMangerListenerFragment() {
     }
 
     override fun onParticipantLeftCall(refId: String?) {
-        if((activity as DashBoardActivity).callParams1 != null &&(activity as DashBoardActivity).callParams2 != null){
-            if (loop == 0){
+        if ((activity as DashBoardActivity).callParams1 != null && (activity as DashBoardActivity).callParams2 != null) {
+            if (loop == 0) {
                 participantsCount -= 1
                 binding.tvcount.text = participantsCount.toString()
-                loop +=  1
-            }else{
+                loop += 1
+            } else {
                 loop = 0
             }
 
-        }else {
+        } else {
             participantsCount -= 1
             binding.tvcount.text = participantsCount.toString()
         }

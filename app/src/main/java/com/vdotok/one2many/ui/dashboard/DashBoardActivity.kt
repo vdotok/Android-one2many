@@ -757,9 +757,11 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
                 turnSpeakerOff()
                 isMulti = false
                 isMultiSession = false
-                enableButton = false
                 sessionIdList.remove(callInfoResponse.callParams?.sessionUuid)
-                mLiveDataEndCall.postValue(true)
+                if (callInfoResponse.callParams?.sessionUuid == sessionId) { // same session ended which was started
+                    enableButton = false
+                    mLiveDataEndCall.postValue(true)
+                }
             }
 
             CallStatus.TARGET_IS_BUSY,

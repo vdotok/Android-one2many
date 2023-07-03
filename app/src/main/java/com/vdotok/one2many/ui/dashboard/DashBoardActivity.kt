@@ -819,7 +819,9 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
             }
             CallStatus.NEW_PARTICIPANT_ARRIVED,
             CallStatus.EXISTING_PARTICIPANTS -> {
-                callInfoResponse.callParams?.participantCount?.let { mListener?.acceptedUser(it) }
+                Handler(Looper.getMainLooper()).postDelayed({
+                    callInfoResponse.callParams?.participantCount?.let { mListener?.acceptedUser(it) }
+                }, 500)
             }
             else -> {
             }

@@ -24,6 +24,7 @@ import com.vdotok.one2many.utils.*
 import com.vdotok.one2many.utils.ApplicationConstants.SDK_PROJECT_ID
 import com.vdotok.network.network.Result
 import com.vdotok.network.utils.Constants
+import com.vdotok.network.utils.Constants.BASE_URL
 import com.vdotok.one2many.QrCodeScannerContract
 import com.vdotok.one2many.models.QRCodeModel
 
@@ -94,7 +95,7 @@ class SignUpFragment: Fragment() {
      * */
     private fun checkUserEmail(email: String) {
         activity?.let {
-            if (SDK_PROJECT_ID.isNotEmpty() && Constants.BASE_URL.isNotEmpty()) {
+            if (SDK_PROJECT_ID.isNotEmpty() && (BASE_URL.isNotEmpty() && BASE_URL.contains("http"))) {
                 viewModel.checkEmailAlreadyExist(email).observe(viewLifecycleOwner) {
 
                     when (it) {
@@ -141,7 +142,7 @@ class SignUpFragment: Fragment() {
 
     private fun signUp() {
         binding.SignUpButton.disable()
-        if (SDK_PROJECT_ID.isNotEmpty() && Constants.BASE_URL.isNotEmpty()) {
+        if (SDK_PROJECT_ID.isNotEmpty() && (BASE_URL.isNotEmpty() && BASE_URL.contains("http"))) {
             viewModel.signUp(
                 SignUpModel(
                     fullName.get().toString(), email.get().toString(),

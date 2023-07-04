@@ -59,7 +59,7 @@
     <string name="cancel">Cancel</string>
     <string name="no_contacts">No contacts found!</string>
     <string name="no_internet">No Internet Connection</string>
-    <string name="api_url_empty">Api Url is Empty!</string>
+    <string name="api_url_empty">Kindly scan the qr code / Enter Credentials of Project</string>
 
     <!--    image descriptions-->
     <string name="description_attachment">image for attachment menu</string>

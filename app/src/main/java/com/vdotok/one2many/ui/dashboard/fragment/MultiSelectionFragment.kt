@@ -85,6 +85,7 @@ class MultiSelectionFragment : CallMangerListenerFragment() {
             bundle.putBoolean("isIncoming", true)
             bundle.putBoolean(DialCallFragment.IS_VIDEO_CALL, model.mediaType == MediaType.VIDEO)
             try {
+                (activity as DashBoardActivity).sessionId = model.sessionUuid
                 Navigation.findNavController(binding.root)
                     .navigate(R.id.action_open_ringing_fragment, bundle)
             } catch (ex: Exception) {

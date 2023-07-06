@@ -840,13 +840,15 @@ class DashBoardActivity : AppCompatActivity(), CallSDKListener {
         else
             sessionId2 = sessionID
 
-        if (callClient.getActiveSessionClient(sessionID)?.getSessionType() == SessionType.SCREEN) {
-            localStreamScreen = stream
-            mListener?.onRemoteStreamReceived(stream, refId, sessionID, false)
-        } else {
-            localStreamVideo = stream
-            mListener?.onRemoteStreamReceived(stream, refId, sessionID, true)
-        }
+        Handler(Looper.getMainLooper()).postDelayed({
+            if (callClient.getActiveSessionClient(sessionID)?.getSessionType() == SessionType.SCREEN) {
+                localStreamScreen = stream
+                mListener?.onRemoteStreamReceived(stream, refId, sessionID, false)
+            } else {
+                localStreamVideo = stream
+                mListener?.onRemoteStreamReceived(stream, refId, sessionID, true)
+            }
+        }, 500)
 
         Log.e("onRemoteStream", "onRemoteStream:  videoTrack : " + stream.toString())
         streamCount++
